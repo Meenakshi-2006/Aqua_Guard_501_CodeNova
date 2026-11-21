@@ -1,0 +1,472 @@
+
+{% extends "base.html" %}
+
+{% block title %}Leak Alerts | AquaGuard{% endblock %}
+
+{% block page_title %}
+Leak Detection Alerts
+{% endblock %}
+
+{% block styles %}
+<style>
+
+.alert-intro {
+    margin-bottom: 25px;
+}
+
+.alert-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.alert-intro p {
+    color: #64748b;
+}
+
+.alert-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.alert-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+}
+
+.alert-card:nth-child(2) {
+    border-left-color: #ef4444;
+}
+
+.alert-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.alert-card:nth-child(4) {
+    border-left-color: #16a36a;
+}
+
+.alert-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.alert-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.alert-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+    margin-bottom: 25px;
+}
+
+.alert-panel h3 {
+    color: #12345a;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.alert-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.alert-filters input,
+.alert-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.alert-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.alert-filters select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.alert-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.alert-table {
+    width: 100%;
+    min-width: 750px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.alert-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.alert-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.alert-table tr:hover {
+    background: #f8fafc;
+}
+
+.severity {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.high {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.medium {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.low {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.alert-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.resolved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.recommendation {
+    background: #eff6ff;
+    border-left: 5px solid #2196f3;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.recommendation h3 {
+    color: #12345a;
+    margin-bottom: 10px;
+}
+
+.recommendation p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+.alert-note {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 15px;
+}
+
+@media(max-width: 950px) {
+    .alert-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .alert-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .alert-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+<div class="alert-intro">
+
+    <h2>🚨 Leakage Detection Center</h2>
+
+    <p>
+        Monitor suspected water leakage, identify severity
+        and take action to reduce water wastage.
+    </p>
+
+</div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="alert-summary">
+
+    <div class="alert-card">
+        <h3>Total Alerts</h3>
+        <h2 id="totalAlerts">05</h2>
+    </div>
+
+    <div class="alert-card">
+        <h3>High Severity</h3>
+        <h2 id="highAlerts">02</h2>
+    </div>
+
+    <div class="alert-card">
+        <h3>Medium Severity</h3>
+        <h2 id="mediumAlerts">02</h2>
+    </div>
+
+    <div class="alert-card">
+        <h3>Resolved Alerts</h3>
+        <h2 id="resolvedAlerts">01</h2>
+    </div>
+
+</div>
+
+
+<!-- ALERT TABLE -->
+<div class="alert-panel">
+
+    <h3>Leakage Alert History</h3>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="alert-filters">
+
+        <input
+            type="text"
+            id="alertSearch"
+            placeholder="Search alert ID or location..."
+        >
+
+        <select id="severityFilter">
+            <option value="all">All Severities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
+
+        <select id="alertStatusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+        </select>
+
+    </div>
+
+
+    <!-- ALERT TABLE -->
+    <div class="alert-table-wrapper">
+
+        <table class="alert-table">
+
+            <thead>
+                <tr>
+                    <th>Alert ID</th>
+                    <th>Location</th>
+                    <th>Flow Rate</th>
+                    <th>Severity</th>
+                    <th>Detection Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="alertTable">
+
+                <tr data-severity="high"
+                    data-status="pending">
+                    <td>AL001</td>
+                    <td>Hostel A</td>
+                    <td>85 L/hour</td>
+                    <td><span class="severity high">High</span></td>
+                    <td>08:30 AM</td>
+                    <td><span class="alert-status pending">Pending</span></td>
+                </tr>
+
+                <tr data-severity="medium"
+                    data-status="in-progress">
+                    <td>AL002</td>
+                    <td>Hostel B</td>
+                    <td>65 L/hour</td>
+                    <td><span class="severity medium">Medium</span></td>
+                    <td>09:15 AM</td>
+                    <td><span class="alert-status in-progress">In Progress</span></td>
+                </tr>
+
+                <tr data-severity="high"
+                    data-status="pending">
+                    <td>AL003</td>
+                    <td>College Block</td>
+                    <td>150 L/hour</td>
+                    <td><span class="severity high">High</span></td>
+                    <td>10:20 AM</td>
+                    <td><span class="alert-status pending">Pending</span></td>
+                </tr>
+
+                <tr data-severity="medium"
+                    data-status="resolved">
+                    <td>AL004</td>
+                    <td>Library</td>
+                    <td>45 L/hour</td>
+                    <td><span class="severity medium">Medium</span></td>
+                    <td>11:00 AM</td>
+                    <td><span class="alert-status resolved">Resolved</span></td>
+                </tr>
+
+                <tr data-severity="low"
+                    data-status="pending">
+                    <td>AL005</td>
+                    <td>Admin Block</td>
+                    <td>25 L/hour</td>
+                    <td><span class="severity low">Low</span></td>
+                    <td>12:10 PM</td>
+                    <td><span class="alert-status pending">Pending</span></td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- RECOMMENDED ACTION -->
+    <div class="recommendation">
+
+        <h3>💡 Recommended Action</h3>
+
+        <p>
+            High severity alerts should be inspected immediately.
+            Check the affected pipeline, examine unusual flow
+            patterns and arrange maintenance if leakage is confirmed.
+        </p>
+
+    </div>
+
+    <p class="alert-note">
+        Note: These are sample demonstration alerts.
+        Actual alerts will be generated using the backend
+        leakage detection system.
+    </p>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput =
+        document.getElementById("alertSearch");
+
+    const severityFilter =
+        document.getElementById("severityFilter");
+
+    const statusFilter =
+        document.getElementById("alertStatusFilter");
+
+    const rows =
+        document.querySelectorAll("#alertTable tr");
+
+    function filterAlerts() {
+
+        const search =
+            searchInput.value.toLowerCase();
+
+        const severity =
+            severityFilter.value;
+
+        const status =
+            statusFilter.value;
+
+        rows.forEach(function (row) {
+
+            const text =
+                row.textContent.toLowerCase();
+
+            const rowSeverity =
+                row.dataset.severity;
+
+            const rowStatus =
+                row.dataset.status;
+
+            const searchMatch =
+                text.includes(search);
+
+            const severityMatch =
+                severity === "all" ||
+                rowSeverity === severity;
+
+            const statusMatch =
+                status === "all" ||
+                rowStatus === status;
+
+            row.style.display =
+                searchMatch && severityMatch && statusMatch
+                ? ""
+                : "none";
+
+        });
+
+    }
+
+    searchInput.addEventListener("input", filterAlerts);
+
+    severityFilter.addEventListener(
+        "change", filterAlerts
+    );
+
+    statusFilter.addEventListener(
+        "change", filterAlerts
+    );
+
+});
+
+</script>
+
+{% endblock %}

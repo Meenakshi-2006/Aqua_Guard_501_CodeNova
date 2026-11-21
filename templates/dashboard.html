@@ -1,0 +1,73 @@
+
+{% extends "base.html" %}
+
+{% block page_title %}
+Water Monitoring Dashboard
+{% endblock %}
+
+{% block content %}
+
+<div class="welcome">
+    <h2>Welcome to AquaGuard 💧</h2>
+    <p>Monitor water consumption and detect possible leakage.</p>
+</div>
+
+<div class="cards">
+
+    <div class="card">
+        <h3>Total Consumption</h3>
+        <h2 id="consumption">12,450 L</h2>
+    </div>
+
+    <div class="card">
+        <h3>Possible Leaks</h3>
+        <h2 id="leaks">03</h2>
+    </div>
+
+    <div class="card">
+        <h3>Active Sensors</h3>
+        <h2 id="sensors">05</h2>
+    </div>
+
+    <div class="card">
+        <h3>Estimated Water Loss</h3>
+        <h2 id="loss">2,160 L</h2>
+    </div>
+
+</div>
+
+<div class="panel">
+    <h3>Water Consumption Overview</h3>
+    <canvas id="waterChart"></canvas>
+</div>
+
+<div class="panel">
+    <h3>Recent Leakage Alerts</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Flow Rate</th>
+                <th>Severity</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody id="alertTable">
+            <tr>
+                <td>Hostel A</td>
+                <td>85 L/hour</td>
+                <td>High</td>
+                <td>Pending</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

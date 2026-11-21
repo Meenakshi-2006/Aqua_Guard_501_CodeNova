@@ -1,0 +1,441 @@
+
+{% extends "base.html" %}
+
+{% block title %}Locations | AquaGuard{% endblock %}
+
+{% block page_title %}
+Location Monitoring
+{% endblock %}
+
+{% block styles %}
+<style>
+
+.location-intro {
+    margin-bottom: 25px;
+}
+
+.location-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.location-intro p {
+    color: #64748b;
+}
+
+.location-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.location-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+}
+
+.location-card:nth-child(2) {
+    border-left-color: #16a36a;
+}
+
+.location-card:nth-child(3) {
+    border-left-color: #ef4444;
+}
+
+.location-card:nth-child(4) {
+    border-left-color: #f59e0b;
+}
+
+.location-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.location-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.location-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.location-panel h3 {
+    color: #12345a;
+    margin-bottom: 20px;
+}
+
+.location-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.location-filters input,
+.location-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.location-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.location-filters select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.location-table-wrapper {
+    overflow-x: auto;
+}
+
+.location-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.location-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.location-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+}
+
+.location-table tr:hover {
+    background: #f8fafc;
+}
+
+.location-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.normal {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.leakage {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.location-note {
+    background: #eff6ff;
+    padding: 20px;
+    border-left: 5px solid #2196f3;
+    border-radius: 8px;
+}
+
+.location-note h3 {
+    color: #12345a;
+    margin-bottom: 10px;
+}
+
+.location-note p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+@media(max-width: 950px) {
+    .location-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .location-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .location-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+
+<div class="location-intro">
+
+    <h2>📍 Monitored Locations</h2>
+
+    <p>
+        Monitor water consumption and sensor activity
+        across different buildings and locations.
+    </p>
+
+</div>
+
+
+<!-- SUMMARY CARDS -->
+
+<div class="location-summary">
+
+    <div class="location-card">
+        <h3>Total Locations</h3>
+        <h2>05</h2>
+    </div>
+
+    <div class="location-card">
+        <h3>Normal Locations</h3>
+        <h2>02</h2>
+    </div>
+
+    <div class="location-card">
+        <h3>Leakage Detected</h3>
+        <h2>02</h2>
+    </div>
+
+    <div class="location-card">
+        <h3>Warning Locations</h3>
+        <h2>01</h2>
+    </div>
+
+</div>
+
+
+<!-- LOCATION TABLE -->
+
+<div class="location-panel">
+
+    <h3>Location Details</h3>
+
+    <div class="location-filters">
+
+        <input
+            type="text"
+            id="locationSearch"
+            placeholder="Search location..."
+        >
+
+        <select id="locationFilter">
+
+            <option value="all">All Locations</option>
+            <option value="normal">Normal</option>
+            <option value="leakage">Leakage</option>
+            <option value="warning">Warning</option>
+
+        </select>
+
+    </div>
+
+
+    <div class="location-table-wrapper">
+
+        <table class="location-table">
+
+            <thead>
+                <tr>
+                    <th>Location ID</th>
+                    <th>Location Name</th>
+                    <th>Active Sensors</th>
+                    <th>Water Consumption</th>
+                    <th>Flow Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="locationTable">
+
+                <tr data-status="leakage">
+                    <td>LOC001</td>
+                    <td>Hostel A</td>
+                    <td>1</td>
+                    <td>3,200 L</td>
+                    <td>85 L/hr</td>
+                    <td>
+                        <span class="location-status leakage">
+                            Leakage
+                        </span>
+                    </td>
+                </tr>
+
+                <tr data-status="normal">
+                    <td>LOC002</td>
+                    <td>Hostel B</td>
+                    <td>1</td>
+                    <td>2,500 L</td>
+                    <td>65 L/hr</td>
+                    <td>
+                        <span class="location-status normal">
+                            Normal
+                        </span>
+                    </td>
+                </tr>
+
+                <tr data-status="leakage">
+                    <td>LOC003</td>
+                    <td>College Block</td>
+                    <td>1</td>
+                    <td>2,800 L</td>
+                    <td>150 L/hr</td>
+                    <td>
+                        <span class="location-status leakage">
+                            Leakage
+                        </span>
+                    </td>
+                </tr>
+
+                <tr data-status="warning">
+                    <td>LOC004</td>
+                    <td>Library</td>
+                    <td>0</td>
+                    <td>1,500 L</td>
+                    <td>0 L/hr</td>
+                    <td>
+                        <span class="location-status warning">
+                            Warning
+                        </span>
+                    </td>
+                </tr>
+
+                <tr data-status="normal">
+                    <td>LOC005</td>
+                    <td>Admin Block</td>
+                    <td>1</td>
+                    <td>2,450 L</td>
+                    <td>55 L/hr</td>
+                    <td>
+                        <span class="location-status normal">
+                            Normal
+                        </span>
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p style="margin-top:15px;color:#64748b;font-size:13px;">
+        Note: These are sample demonstration records.
+        Actual location information will be connected to the backend.
+    </p>
+
+</div>
+
+
+<!-- LOCATION RECOMMENDATIONS -->
+
+<div class="location-panel">
+
+    <div class="location-note">
+
+        <h3>💡 Location Monitoring Recommendations</h3>
+
+        <p>
+            <strong>Hostel A:</strong>
+            Check the pipeline for unusual water flow.
+        </p>
+
+        <p>
+            <strong>College Block:</strong>
+            Prioritize inspection because of its high flow rate.
+        </p>
+
+        <p>
+            <strong>Library:</strong>
+            Check the sensor connection because it is currently showing no active sensor.
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const search =
+        document.getElementById("locationSearch");
+
+    const filter =
+        document.getElementById("locationFilter");
+
+    const rows =
+        document.querySelectorAll("#locationTable tr");
+
+    function filterLocations() {
+
+        const searchValue =
+            search.value.toLowerCase();
+
+        const selectedStatus =
+            filter.value;
+
+        rows.forEach(function(row) {
+
+            const text =
+                row.textContent.toLowerCase();
+
+            const status =
+                row.dataset.status;
+
+            const matchesSearch =
+                text.includes(searchValue);
+
+            const matchesStatus =
+                selectedStatus === "all" ||
+                status === selectedStatus;
+
+            row.style.display =
+                matchesSearch && matchesStatus ? "" : "none";
+
+        });
+
+    }
+
+    search.addEventListener("input", filterLocations);
+
+    filter.addEventListener("change", filterLocations);
+
+});
+
+</script>
+
+{% endblock %}
