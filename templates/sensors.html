@@ -31,18 +31,6 @@ Virtual Sensor Monitoring
 }
 .btn-primary:hover { background: #1976d2; }
 
-.btn-small {
-    background: #edf5fb;
-    color: #12345a;
-    border: 1px solid #cbd5e1;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-}
-.btn-small:hover { background: #dbeafe; }
-
 .readonly-banner {
     display: none;
     background: #fef3c7;
@@ -118,7 +106,7 @@ Virtual Sensor Monitoring
 .sensor-controls select { width: 35%; background: white; }
 
 .sensor-table-wrapper { width: 100%; overflow-x: auto; }
-.sensor-table { width: 100%; border-collapse: collapse; min-width: 720px; text-align: left; }
+.sensor-table { width: 100%; border-collapse: collapse; min-width: 640px; text-align: left; }
 .sensor-table th { background: #edf5fb; color: #12345a; padding: 15px; font-size: 14px; }
 .sensor-table td { padding: 16px 15px; color: #475569; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
 .sensor-table tbody tr:hover { background: #f8fafc; }
@@ -210,12 +198,11 @@ Virtual Sensor Monitoring
                     <th>Pressure</th>
                     <th>Scenario Mode</th>
                     <th>Status</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="sensorTable">
                 <tr>
-                    <td colspan="7" style="text-align:center; color:#64748b;">Loading virtual sensors...</td>
+                    <td colspan="6" style="text-align:center; color:#64748b;">Loading virtual sensors...</td>
                 </tr>
             </tbody>
         </table>
@@ -361,7 +348,7 @@ async function loadSensorsFromBackend() {
         if (sensors.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" style="text-align:center; color:#64748b;">
+                    <td colspan="6" style="text-align:center; color:#64748b;">
                         ${isAdmin
                             ? 'No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!'
                             : 'No sensors active for your location yet.'}
@@ -410,11 +397,6 @@ async function loadSensorsFromBackend() {
                     </select>
                 </td>
                 <td><span class="status ${badgeClass}">${statusLabel}</span></td>
-                <td>
-                    ${isAdmin
-                        ? `<button class="btn-small" onclick="generateOneReading('${s.sensor_id}')">▶ Pulse Reading</button>`
-                        : `<span style="color:#94a3b8; font-size:12px;">Read-Only</span>`}
-                </td>
             `;
             tbody.appendChild(tr);
         });
