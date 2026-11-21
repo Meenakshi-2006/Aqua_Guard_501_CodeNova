@@ -152,6 +152,130 @@
             flex: 1;
         }
 
+        /* FLOATING AI CHATBOT WIDGET */
+        .ag-chat-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1d4ed8;
+            color: #ffffff;
+            border: none;
+            border-radius: 50px;
+            padding: 13px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(15, 39, 71, 0.25);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ag-chat-toggle:hover { background: #1e40af; }
+
+        .ag-chat-box {
+            position: fixed;
+            bottom: 82px;
+            right: 24px;
+            width: 340px;
+            max-width: calc(100vw - 32px);
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 12px 32px rgba(15, 39, 71, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 999;
+        }
+
+        .ag-chat-header {
+            background: #0f2747;
+            color: #ffffff;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .ag-chat-close {
+            background: none;
+            border: none;
+            color: #cbd5e1;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .ag-chat-messages {
+            padding: 14px;
+            height: 260px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f8fafc;
+            font-size: 13px;
+        }
+
+        .ag-msg {
+            padding: 10px 12px;
+            border-radius: 10px;
+            line-height: 1.45;
+            max-width: 88%;
+        }
+        .ag-msg-bot {
+            background: #e0f2fe;
+            color: #0c4a6e;
+            align-self: flex-start;
+        }
+        .ag-msg-user {
+            background: #1d4ed8;
+            color: #ffffff;
+            align-self: flex-end;
+        }
+
+        .ag-quick-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 8px 12px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+        }
+        .ag-chip {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .ag-chip:hover { background: #dbeafe; }
+
+        .ag-chat-input-row {
+            display: flex;
+            border-top: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .ag-chat-input-row input {
+            flex: 1;
+            border: none;
+            padding: 11px 12px;
+            font-size: 13px;
+            outline: none;
+        }
+        .ag-chat-input-row button {
+            background: #1d4ed8;
+            color: #ffffff;
+            border: none;
+            padding: 0 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         @media (max-width: 850px) {
             .sidebar {
                 position: static;
@@ -188,7 +312,7 @@
 
         <div class="sidebar-footer">
             <div class="sidebar-user-box" id="sidebarUserBox">
-                <div class="sidebar-user-name" id="sidebarUserName">Admin User</div>
+                <div class="sidebar-user-name" id="sidebarUserName">AquaGuard Admin</div>
                 <div class="sidebar-user-role" id="sidebarUserRole">Role: Admin (All Access)</div>
                 <a href="/logout" class="logout-link" onclick="localStorage.removeItem('aquaguard_user')">⎋ Logout</a>
             </div>
@@ -209,6 +333,30 @@
         <main class="content-area">
             {% block content %}{% endblock %}
         </main>
+    </div>
+
+    <!-- FLOATING AQUAGUARD AI ASSISTANT -->
+    <button class="ag-chat-toggle" onclick="toggleAgChat()">🤖 Ask AquaGuard AI</button>
+
+    <div class="ag-chat-box" id="agChatBox">
+        <div class="ag-chat-header">
+            <span>💧 AquaGuard AI Assistant</span>
+            <button class="ag-chat-close" onclick="toggleAgChat()">×</button>
+        </div>
+        <div class="ag-chat-messages" id="agChatMessages">
+            <div class="ag-msg ag-msg-bot">
+                Hi! Ask me about <strong>active leaks</strong>, <strong>total water usage</strong>, <strong>sensor health</strong>, or <strong>inspection priority</strong>.
+            </div>
+        </div>
+        <div class="ag-quick-chips">
+            <button class="ag-chip" onclick="sendAgQuick('Any active leaks?')">Any active leaks?</button>
+            <button class="ag-chip" onclick="sendAgQuick('Highest water usage?')">Highest usage?</button>
+            <button class="ag-chip" onclick="sendAgQuick('System summary')">System summary</button>
+        </div>
+        <div class="ag-chat-input-row">
+            <input type="text" id="agChatInput" placeholder="Ask about water telemetry..." onkeydown="if(event.key==='Enter') sendAgChat()">
+            <button onclick="sendAgChat()">Send</button>
+        </div>
     </div>
 
     <script>
@@ -247,6 +395,75 @@
                 }
             }
         })();
+
+        function toggleAgChat() {
+            const box = document.getElementById("agChatBox");
+            box.style.display = box.style.display === "flex" ? "none" : "flex";
+        }
+
+        function sendAgQuick(text) {
+            document.getElementById("agChatInput").value = text;
+            sendAgChat();
+        }
+
+        async function sendAgChat() {
+            const input = document.getElementById("agChatInput");
+            const query = input.value.trim();
+            if (!query) return;
+            input.value = "";
+
+            const msgBox = document.getElementById("agChatMessages");
+            msgBox.innerHTML += `<div class="ag-msg ag-msg-user">${query}</div>`;
+            msgBox.scrollTop = msgBox.scrollHeight;
+
+            let reply = "";
+            try {
+                const sRes = await fetch("/api/sensors");
+                const sData = await sRes.json();
+                let sensors = sData.sensors || [];
+
+                const savedUser = JSON.parse(localStorage.getItem("aquaguard_user") || "{}");
+                if (savedUser.role === "resident" && savedUser.location_id) {
+                    sensors = sensors.filter(s => s.location_id.toLowerCase() === savedUser.location_id.toLowerCase());
+                }
+
+                const details = [];
+                let totalFlow = 0;
+                for (const s of sensors) {
+                    const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+                    const rData = await rRes.json();
+                    const readings = rData.readings || [];
+                    const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+                    const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
+                    totalFlow += flow;
+                    details.push({ ...s, flow });
+                }
+
+                const leaks = details.filter(d => d.scenario && d.scenario !== "normal");
+                const topSensor = [...details].sort((a, b) => b.flow - a.flow)[0];
+                const q = query.toLowerCase();
+
+                if (sensors.length === 0) {
+                    reply = "No sensors are active yet. Go to <strong>Virtual Sensors</strong> and click <em>+ Load 4 Demo Virtual Sensors</em>.";
+                } else if (q.includes("leak") || q.includes("alert") || q.includes("burst") || q.includes("priority")) {
+                    if (leaks.length === 0) {
+                        reply = `✅ Great news! All <strong>${sensors.length}</strong> monitored sensors are operating in Normal Flow with zero active leaks.`;
+                    } else {
+                        const list = leaks.map(l => `• <strong>${l.location_id} (${l.sensor_id})</strong>: ${l.scenario.replace("_", " ")} at ${l.flow.toFixed(1)} L/hr`).join("<br>");
+                        reply = `🚨 Found <strong>${leaks.length}</strong> active leak(s):<br>${list}<br>Open <strong>Leak Alerts</strong> or <strong>Inspection</strong> to resolve.`;
+                    }
+                } else if (q.includes("high") || q.includes("usage") || q.includes("consumption") || q.includes("flow")) {
+                    reply = `💧 Total current flow across <strong>${sensors.length}</strong> sensors is <strong>${totalFlow.toFixed(1)} L/hr</strong>. Highest flow is at <strong>${topSensor.location_id} (${topSensor.sensor_id})</strong> with <strong>${topSensor.flow.toFixed(1)} L/hr</strong>.`;
+                } else {
+                    reply = `📊 <strong>Live AquaGuard Summary:</strong><br>• Active Sensors: ${sensors.length}<br>• Total Flow: ${totalFlow.toFixed(1)} L/hr<br>• Active Leaks: ${leaks.length}<br>• Top Consumer: ${topSensor.location_id} (${topSensor.flow.toFixed(1)} L/hr)`;
+                }
+            } catch (e) {
+                reply = "Unable to fetch live sensor telemetry right now. Ensure the Flask server is running.";
+            }
+
+            msgBox.innerHTML += `<div class="ag-msg ag-msg-bot">${reply}</div>`;
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
     </script>
     {% block scripts %}{% endblock %}
 
