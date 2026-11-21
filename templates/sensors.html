@@ -141,6 +141,18 @@ Virtual Sensor Monitoring
 .offline { background: #fee2e2; color: #dc2626; }
 .warning { background: #fef3c7; color: #b45309; }
 .demo-note { margin-top: 18px; color: #64748b; font-size: 13px; }
+
+@media (max-width: 1000px) {
+    .sensor-summary { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .sensor-summary { grid-template-columns: 1fr; }
+    .sensor-controls { flex-direction: column; }
+    .sensor-controls input,
+    .sensor-controls select { width: 100%; }
+    .sensor-panel { padding: 15px; }
+}
 </style>
 {% endblock %}
 
@@ -157,14 +169,15 @@ Virtual Sensor Monitoring
     <button class="btn-primary admin-only" id="seedSensorsBtn" onclick="seedDemoSensors()">+ Load 4 Demo Virtual Sensors</button>
 </div>
 
-<!-- ADD NEW VIRTUAL SENSOR (ADMIN ONLY WITH LOCATION DROPDOWN) -->
+<!-- ADD NEW VIRTUAL SENSOR (ADMIN ONLY WITH DROPDOWN + CUSTOM NEW LOCATION OPTION) -->
 <div class="add-sensor-panel admin-only" id="addSensorPanel">
     <h3>Add Virtual Sensor Node</h3>
     <div class="add-sensor-form">
         <input type="text" id="newSensorId" placeholder="Sensor ID (e.g., VS-05)">
-        <select id="newLocationId">
+        <select id="newLocationId" onchange="toggleCustomLocationInput()">
             <option value="">-- Select Location --</option>
         </select>
+        <input type="text" id="customLocationInput" placeholder="Enter New Location Name (e.g., Library Block)" style="display:none; border-color:#2196f3;">
         <input type="number" id="newNormalFlow" placeholder="Normal Flow L/h (e.g., 45)" value="45">
         <button class="btn-primary" onclick="addNewSensor()">Add Sensor</button>
     </div>
@@ -265,17 +278,36 @@ async function detectUserRole() {
     }
 }
 
-async function populateLocationDropdown() {
+function getAllKnownLocations() {
+    let locations = [...FALLBACK_LOCATIONS];
+    try {
+        const custom = JSON.parse(localStorage.getItem("aquaguard_custom_locations") || "[]");
+        custom.forEach(item => {
+            const name = typeof item === "string" ? item : item.name;
+            if (name && !locations.some(l => l.toLowerCase() === name.toLowerCase())) {
+                locations.push(name);
+            }
+        });
+    } catch (e) {}
+    return locations;
+}
+
+async function populateLocationDropdown(selectedValue = "") {
     const select = document.getElementById("newLocationId");
     if (!select) return;
-    let locations = [...FALLBACK_LOCATIONS];
+    let locations = getAllKnownLocations();
 
     try {
         const res = await fetch("/api/locations");
         if (res.ok) {
             const data = await res.json();
             if (data.success && Array.isArray(data.locations) && data.locations.length > 0) {
-                locations = data.locations.map(l => typeof l === "string" ? l : l.name);
+                data.locations.forEach(l => {
+                    const name = typeof l === "string" ? l : l.name;
+                    if (name && !locations.some(x => x.toLowerCase() === name.toLowerCase())) {
+                        locations.push(name);
+                    }
+                });
             }
         }
     } catch (e) {}
@@ -285,8 +317,29 @@ async function populateLocationDropdown() {
         const opt = document.createElement("option");
         opt.value = loc;
         opt.textContent = loc;
+        if (selectedValue && loc.toLowerCase() === selectedValue.toLowerCase()) {
+            opt.selected = true;
+        }
         select.appendChild(opt);
     });
+
+    // Special option at the bottom to create a brand-new location right from this form
+    const newOpt = document.createElement("option");
+    newOpt.value = "__NEW_LOCATION__";
+    newOpt.textContent = "➕ + Add New Location...";
+    select.appendChild(newOpt);
+}
+
+function toggleCustomLocationInput() {
+    const select = document.getElementById("newLocationId");
+    const customInput = document.getElementById("customLocationInput");
+    if (select.value === "__NEW_LOCATION__") {
+        customInput.style.display = "block";
+        customInput.focus();
+    } else {
+        customInput.style.display = "none";
+        customInput.value = "";
+    }
 }
 
 function normalizeScenario(raw) {
@@ -305,9 +358,8 @@ async function loadSensorsFromBackend() {
 
         let sensors = data.sensors || [];
 
-        // Enforce Resident location scope on frontend as well
         if (currentUser.role === "resident" && currentUser.location_id) {
-            sensors = sensors.filter(s => s.location_id === currentUser.location_id);
+            sensors = sensors.filter(s => s.location_id.toLowerCase() === currentUser.location_id.toLowerCase());
         }
 
         const tbody = document.getElementById("sensorTable");
@@ -380,11 +432,46 @@ async function loadSensorsFromBackend() {
 
 async function addNewSensor() {
     const sensorId = document.getElementById("newSensorId").value.trim();
-    const locationId = document.getElementById("newLocationId").value;
+    const select = document.getElementById("newLocationId");
+    const customInput = document.getElementById("customLocationInput");
     const normalFlow = parseFloat(document.getElementById("newNormalFlow").value) || 40;
 
+    let locationId = select.value;
+
+    // If user chose "+ Add New Location...", validate and register the new distinct location first
+    if (locationId === "__NEW_LOCATION__") {
+        const newLocName = customInput.value.trim();
+        if (!newLocName) {
+            alert("Please enter the new location name.");
+            customInput.focus();
+            return;
+        }
+
+        const existingLocations = getAllKnownLocations();
+        const isDuplicate = existingLocations.some(l => l.toLowerCase() === newLocName.toLowerCase());
+        if (isDuplicate) {
+            alert(`"${newLocName}" already exists! Please select it from the dropdown or enter a different new location.`);
+            return;
+        }
+
+        // Save new distinct location
+        try {
+            await fetch("/api/locations", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: newLocName, type: "Monitored Zone" })
+            });
+        } catch (e) {}
+
+        const customList = JSON.parse(localStorage.getItem("aquaguard_custom_locations") || "[]");
+        customList.push({ name: newLocName, type: "Monitored Zone" });
+        localStorage.setItem("aquaguard_custom_locations", JSON.stringify(customList));
+
+        locationId = newLocName;
+    }
+
     if (!sensorId || !locationId) {
-        alert("Please enter a Sensor ID and select a Location from the dropdown.");
+        alert("Please enter a Sensor ID and select or create a Location.");
         return;
     }
 
@@ -397,7 +484,9 @@ async function addNewSensor() {
     if (data.success) {
         await generateOneReading(sensorId);
         document.getElementById("newSensorId").value = "";
-        document.getElementById("newLocationId").value = "";
+        customInput.value = "";
+        customInput.style.display = "none";
+        await populateLocationDropdown();
     } else {
         alert(data.error || "Could not add sensor");
     }
