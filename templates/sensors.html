@@ -8,8 +8,6 @@ Virtual Sensor Monitoring
 
 {% block styles %}
 <style>
-
-/* PAGE HEADER */
 .sensor-intro {
     margin-bottom: 25px;
     display: flex;
@@ -18,18 +16,9 @@ Virtual Sensor Monitoring
     flex-wrap: wrap;
     gap: 15px;
 }
+.sensor-intro h2 { color: #12345a; font-size: 25px; margin-bottom: 8px; }
+.sensor-intro p { color: #64748b; }
 
-.sensor-intro h2 {
-    color: #12345a;
-    font-size: 25px;
-    margin-bottom: 8px;
-}
-
-.sensor-intro p {
-    color: #64748b;
-}
-
-/* ACTION BUTTONS */
 .btn-primary {
     background: #2196f3;
     color: white;
@@ -40,10 +29,7 @@ Virtual Sensor Monitoring
     font-weight: 600;
     cursor: pointer;
 }
-
-.btn-primary:hover {
-    background: #1976d2;
-}
+.btn-primary:hover { background: #1976d2; }
 
 .btn-small {
     background: #edf5fb;
@@ -55,12 +41,20 @@ Virtual Sensor Monitoring
     font-weight: 600;
     cursor: pointer;
 }
+.btn-small:hover { background: #dbeafe; }
 
-.btn-small:hover {
-    background: #dbeafe;
+.readonly-banner {
+    display: none;
+    background: #fef3c7;
+    color: #92400e;
+    border-left: 5px solid #f59e0b;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 13.5px;
+    font-weight: 600;
 }
 
-/* ADD SENSOR BAR */
 .add-sensor-panel {
     background: white;
     padding: 20px;
@@ -69,36 +63,25 @@ Virtual Sensor Monitoring
     box-shadow: 0 3px 12px rgba(15,39,71,0.05);
     margin-bottom: 25px;
 }
-
-.add-sensor-panel h3 {
-    color: #12345a;
-    font-size: 17px;
-    margin-bottom: 14px;
-}
-
-.add-sensor-form {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.add-sensor-form input {
+.add-sensor-panel h3 { color: #12345a; font-size: 17px; margin-bottom: 14px; }
+.add-sensor-form { display: flex; gap: 12px; flex-wrap: wrap; }
+.add-sensor-form input,
+.add-sensor-form select {
     padding: 10px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 14px;
+    background: white;
     flex: 1;
-    min-width: 160px;
+    min-width: 170px;
 }
 
-/* SUMMARY CARDS */
 .sensor-summary {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 18px;
     margin-bottom: 25px;
 }
-
 .sensor-card {
     background: white;
     padding: 22px;
@@ -107,31 +90,12 @@ Virtual Sensor Monitoring
     border-left: 5px solid #2196f3;
     box-shadow: 0 3px 12px rgba(15,39,71,0.05);
 }
+.sensor-card h3 { color: #64748b; font-size: 14px; margin-bottom: 12px; }
+.sensor-card h2 { color: #12345a; font-size: 27px; }
+.sensor-card:nth-child(2) { border-left-color: #22a06b; }
+.sensor-card:nth-child(3) { border-left-color: #f59e0b; }
+.sensor-card:nth-child(4) { border-left-color: #ef5350; }
 
-.sensor-card h3 {
-    color: #64748b;
-    font-size: 14px;
-    margin-bottom: 12px;
-}
-
-.sensor-card h2 {
-    color: #12345a;
-    font-size: 27px;
-}
-
-.sensor-card:nth-child(2) {
-    border-left-color: #22a06b;
-}
-
-.sensor-card:nth-child(3) {
-    border-left-color: #f59e0b;
-}
-
-.sensor-card:nth-child(4) {
-    border-left-color: #ef5350;
-}
-
-/* SENSOR TABLE PANEL */
 .sensor-panel {
     background: white;
     padding: 25px;
@@ -139,21 +103,9 @@ Virtual Sensor Monitoring
     border: 1px solid #e2e8f0;
     box-shadow: 0 3px 12px rgba(15,39,71,0.05);
 }
+.sensor-panel h3 { color: #12345a; font-size: 20px; margin-bottom: 20px; }
 
-.sensor-panel h3 {
-    color: #12345a;
-    font-size: 20px;
-    margin-bottom: 20px;
-}
-
-/* SEARCH AND FILTER */
-.sensor-controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
+.sensor-controls { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 .sensor-controls input,
 .sensor-controls select {
     padding: 11px 14px;
@@ -162,46 +114,14 @@ Virtual Sensor Monitoring
     font-size: 14px;
     outline: none;
 }
+.sensor-controls input { width: 65%; }
+.sensor-controls select { width: 35%; background: white; }
 
-.sensor-controls input {
-    width: 65%;
-}
-
-.sensor-controls select {
-    width: 35%;
-    background: white;
-}
-
-/* TABLE */
-.sensor-table-wrapper {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.sensor-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 720px;
-    text-align: left;
-}
-
-.sensor-table th {
-    background: #edf5fb;
-    color: #12345a;
-    padding: 15px;
-    font-size: 14px;
-}
-
-.sensor-table td {
-    padding: 16px 15px;
-    color: #475569;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 14px;
-}
-
-.sensor-table tbody tr:hover {
-    background: #f8fafc;
-}
+.sensor-table-wrapper { width: 100%; overflow-x: auto; }
+.sensor-table { width: 100%; border-collapse: collapse; min-width: 720px; text-align: left; }
+.sensor-table th { background: #edf5fb; color: #12345a; padding: 15px; font-size: 14px; }
+.sensor-table td { padding: 16px 15px; color: #475569; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+.sensor-table tbody tr:hover { background: #f8fafc; }
 
 .scenario-select {
     padding: 6px 10px;
@@ -210,85 +130,41 @@ Virtual Sensor Monitoring
     font-size: 13px;
     background: white;
 }
-
-/* STATUS LABELS */
-.status {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.online {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-.offline {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-.warning {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-/* NOTE */
-.demo-note {
-    margin-top: 18px;
+.scenario-select:disabled {
+    background: #f1f5f9;
     color: #64748b;
-    font-size: 13px;
+    cursor: not-allowed;
 }
 
-/* RESPONSIVE */
-@media (max-width: 1000px) {
-    .sensor-summary {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 600px) {
-    .sensor-summary {
-        grid-template-columns: 1fr;
-    }
-
-    .sensor-controls {
-        flex-direction: column;
-    }
-
-    .sensor-controls input,
-    .sensor-controls select {
-        width: 100%;
-    }
-
-    .sensor-panel {
-        padding: 15px;
-    }
-}
-
+.status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+.online { background: #dcfce7; color: #15803d; }
+.offline { background: #fee2e2; color: #dc2626; }
+.warning { background: #fef3c7; color: #b45309; }
+.demo-note { margin-top: 18px; color: #64748b; font-size: 13px; }
 </style>
 {% endblock %}
 
 
 {% block content %}
 
-<!-- INTRODUCTION -->
+<div id="readonlyBanner" class="readonly-banner"></div>
+
 <div class="sensor-intro">
     <div>
         <h2>💧 Virtual Sensor Monitoring</h2>
-        <p>Monitor water flow, pressure and virtual sensor health across different locations.</p>
+        <p id="sensorPageSubtitle">Monitor water flow, pressure and virtual sensor health across different locations.</p>
     </div>
-    <button class="btn-primary" onclick="seedDemoSensors()">+ Load 4 Demo Virtual Sensors</button>
+    <button class="btn-primary admin-only" id="seedSensorsBtn" onclick="seedDemoSensors()">+ Load 4 Demo Virtual Sensors</button>
 </div>
 
-<!-- ADD NEW VIRTUAL SENSOR -->
-<div class="add-sensor-panel">
+<!-- ADD NEW VIRTUAL SENSOR (ADMIN ONLY WITH LOCATION DROPDOWN) -->
+<div class="add-sensor-panel admin-only" id="addSensorPanel">
     <h3>Add Virtual Sensor Node</h3>
     <div class="add-sensor-form">
-        <input type="text" id="newSensorId" placeholder="Sensor ID (e.g., VS-01)">
-        <input type="text" id="newLocationId" placeholder="Location (e.g., Hostel Block A)">
+        <input type="text" id="newSensorId" placeholder="Sensor ID (e.g., VS-05)">
+        <select id="newLocationId">
+            <option value="">-- Select Location --</option>
+        </select>
         <input type="number" id="newNormalFlow" placeholder="Normal Flow L/h (e.g., 45)" value="45">
         <button class="btn-primary" onclick="addNewSensor()">Add Sensor</button>
     </div>
@@ -296,59 +172,27 @@ Virtual Sensor Monitoring
 
 <!-- SENSOR SUMMARY -->
 <div class="sensor-summary">
-
-    <div class="sensor-card">
-        <h3>Total Sensors</h3>
-        <h2 id="totalSensors">00</h2>
-    </div>
-
-    <div class="sensor-card">
-        <h3>Online Sensors</h3>
-        <h2 id="onlineSensors">00</h2>
-    </div>
-
-    <div class="sensor-card">
-        <h3>Warning Sensors</h3>
-        <h2 id="warningSensors">00</h2>
-    </div>
-
-    <div class="sensor-card">
-        <h3>Offline Sensors</h3>
-        <h2 id="offlineSensors">00</h2>
-    </div>
-
+    <div class="sensor-card"><h3>Total Sensors</h3><h2 id="totalSensors">00</h2></div>
+    <div class="sensor-card"><h3>Online Sensors</h3><h2 id="onlineSensors">00</h2></div>
+    <div class="sensor-card"><h3>Warning Sensors</h3><h2 id="warningSensors">00</h2></div>
+    <div class="sensor-card"><h3>Offline Sensors</h3><h2 id="offlineSensors">00</h2></div>
 </div>
-
 
 <!-- SENSOR TABLE -->
 <div class="sensor-panel">
-
     <h3>Live Virtual Sensor Nodes</h3>
-
-    <!-- SEARCH AND FILTER -->
     <div class="sensor-controls">
-
-        <input
-            type="text"
-            id="sensorSearch"
-            placeholder="Search sensor ID or location..."
-        >
-
+        <input type="text" id="sensorSearch" placeholder="Search sensor ID or location...">
         <select id="statusFilter">
             <option value="all">All Sensors</option>
             <option value="online">Online</option>
             <option value="warning">Warning</option>
             <option value="offline">Offline</option>
         </select>
-
     </div>
 
-
-    <!-- TABLE -->
     <div class="sensor-table-wrapper">
-
         <table class="sensor-table">
-
             <thead>
                 <tr>
                     <th>Sensor ID</th>
@@ -360,23 +204,15 @@ Virtual Sensor Monitoring
                     <th>Action</th>
                 </tr>
             </thead>
-
             <tbody id="sensorTable">
                 <tr>
-                    <td colspan="7" style="text-align:center; color:#64748b;">
-                        No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!
-                    </td>
+                    <td colspan="7" style="text-align:center; color:#64748b;">Loading virtual sensors...</td>
                 </tr>
             </tbody>
-
         </table>
-
     </div>
 
-    <p class="demo-note" id="sensorStatusMsg">
-        Connected to Backend Virtual Sensor Engine (/api/sensors).
-    </p>
-
+    <p class="demo-note" id="sensorStatusMsg">Connected to Backend Virtual Sensor Engine (/api/sensors).</p>
 </div>
 
 {% endblock %}
@@ -384,17 +220,75 @@ Virtual Sensor Monitoring
 
 {% block scripts %}
 <script>
-
 let latestReadingsMap = {};
+let currentUser = { role: "admin", location_id: null };
 
-document.addEventListener("DOMContentLoaded", function () {
-    loadSensorsFromBackend();
+const FALLBACK_LOCATIONS = [
+    "Main Gate Inlet",
+    "Hostel Block A",
+    "Hostel Block B Tank",
+    "Mess & Kitchen"
+];
+
+document.addEventListener("DOMContentLoaded", async function () {
+    await detectUserRole();
+    await populateLocationDropdown();
+    await loadSensorsFromBackend();
 
     document.getElementById("sensorSearch").addEventListener("input", filterSensors);
     document.getElementById("statusFilter").addEventListener("change", filterSensors);
 });
 
-// Normalize any scenario name to match backend values
+async function detectUserRole() {
+    try {
+        const res = await fetch("/api/me");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.user) currentUser = data.user;
+        } else {
+            const saved = localStorage.getItem("aquaguard_user");
+            if (saved) currentUser = JSON.parse(saved);
+        }
+    } catch (e) {
+        const saved = localStorage.getItem("aquaguard_user");
+        if (saved) currentUser = JSON.parse(saved);
+    }
+
+    const isAdmin = currentUser.role === "admin";
+    if (!isAdmin) {
+        document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+        const banner = document.getElementById("readonlyBanner");
+        banner.style.display = "block";
+        banner.textContent = currentUser.role === "resident"
+            ? `🔒 Resident View (${currentUser.location_id}): Showing live sensors assigned exclusively to your block.`
+            : "👁️ Management View (Read-Only): You have full visibility across all campus locations.";
+    }
+}
+
+async function populateLocationDropdown() {
+    const select = document.getElementById("newLocationId");
+    if (!select) return;
+    let locations = [...FALLBACK_LOCATIONS];
+
+    try {
+        const res = await fetch("/api/locations");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.locations) && data.locations.length > 0) {
+                locations = data.locations.map(l => typeof l === "string" ? l : l.name);
+            }
+        }
+    } catch (e) {}
+
+    select.innerHTML = '<option value="">-- Select Location --</option>';
+    locations.forEach(loc => {
+        const opt = document.createElement("option");
+        opt.value = loc;
+        opt.textContent = loc;
+        select.appendChild(opt);
+    });
+}
+
 function normalizeScenario(raw) {
     if (!raw) return "normal";
     if (raw === "leak" || raw === "continuous_leak") return "continuous_leak";
@@ -403,29 +297,35 @@ function normalizeScenario(raw) {
     return "normal";
 }
 
-// 1. Fetch all sensors from GET /api/sensors
 async function loadSensorsFromBackend() {
     try {
         const res = await fetch("/api/sensors");
         const data = await res.json();
-
         if (!data.success) return;
 
-        const sensors = data.sensors || [];
+        let sensors = data.sensors || [];
+
+        // Enforce Resident location scope on frontend as well
+        if (currentUser.role === "resident" && currentUser.location_id) {
+            sensors = sensors.filter(s => s.location_id === currentUser.location_id);
+        }
+
         const tbody = document.getElementById("sensorTable");
+        const isAdmin = currentUser.role === "admin";
 
         if (sensors.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" style="text-align:center; color:#64748b;">
-                        No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!
+                        ${isAdmin
+                            ? 'No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!'
+                            : 'No sensors active for your location yet.'}
                     </td>
                 </tr>`;
             updateSummaryCards([]);
             return;
         }
 
-        // Fetch latest reading for each sensor
         for (const s of sensors) {
             try {
                 const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
@@ -454,7 +354,7 @@ async function loadSensorsFromBackend() {
                 <td>${Number(flowVal).toFixed(1)} L/hour</td>
                 <td>${Number(pressureVal).toFixed(1)} bar</td>
                 <td>
-                    <select class="scenario-select" onchange="changeScenario('${s.sensor_id}', this.value)">
+                    <select class="scenario-select" ${isAdmin ? "" : "disabled"} onchange="changeScenario('${s.sensor_id}', this.value)">
                         <option value="normal" ${currentScenario === "normal" ? "selected" : ""}>Normal Flow</option>
                         <option value="continuous_leak" ${currentScenario === "continuous_leak" ? "selected" : ""}>Continuous Leak</option>
                         <option value="gradual_leak" ${currentScenario === "gradual_leak" ? "selected" : ""}>Gradual Leak</option>
@@ -463,7 +363,9 @@ async function loadSensorsFromBackend() {
                 </td>
                 <td><span class="status ${statusKey}">${statusLabel}</span></td>
                 <td>
-                    <button class="btn-small" onclick="generateOneReading('${s.sensor_id}')">▶ Pulse Reading</button>
+                    ${isAdmin
+                        ? `<button class="btn-small" onclick="generateOneReading('${s.sensor_id}')">▶ Pulse Reading</button>`
+                        : `<span style="color:#94a3b8; font-size:12px;">Read-Only</span>`}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -476,25 +378,20 @@ async function loadSensorsFromBackend() {
     }
 }
 
-// 2. Add a single virtual sensor via POST /api/sensors
 async function addNewSensor() {
     const sensorId = document.getElementById("newSensorId").value.trim();
-    const locationId = document.getElementById("newLocationId").value.trim();
+    const locationId = document.getElementById("newLocationId").value;
     const normalFlow = parseFloat(document.getElementById("newNormalFlow").value) || 40;
 
     if (!sensorId || !locationId) {
-        alert("Please enter both Sensor ID and Location.");
+        alert("Please enter a Sensor ID and select a Location from the dropdown.");
         return;
     }
 
     const res = await fetch("/api/sensors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            sensor_id: sensorId,
-            location_id: locationId,
-            normal_flow: normalFlow
-        })
+        body: JSON.stringify({ sensor_id: sensorId, location_id: locationId, normal_flow: normalFlow })
     });
     const data = await res.json();
     if (data.success) {
@@ -506,7 +403,6 @@ async function addNewSensor() {
     }
 }
 
-// 3. One-click load 4 demo virtual sensors for presentation
 async function seedDemoSensors() {
     const demos = [
         { sensor_id: "VS-01", location_id: "Main Gate Inlet", normal_flow: 180 },
@@ -526,11 +422,8 @@ async function seedDemoSensors() {
     loadSensorsFromBackend();
 }
 
-// 4. Generate a new reading via POST /api/sensors/<id>/readings
 async function generateOneReading(sensorId) {
-    const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/readings`, {
-        method: "POST"
-    });
+    const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/readings`, { method: "POST" });
     const data = await res.json();
     if (data.success && data.reading) {
         latestReadingsMap[sensorId] = data.reading;
@@ -538,7 +431,6 @@ async function generateOneReading(sensorId) {
     }
 }
 
-// 5. Switch sensor scenario via POST /api/sensors/<id>/scenario
 async function changeScenario(sensorId, scenario) {
     const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/scenario`, {
         method: "POST",
@@ -546,14 +438,9 @@ async function changeScenario(sensorId, scenario) {
         body: JSON.stringify({ scenario: scenario })
     });
     const data = await res.json();
-    if (!data.success) {
-        console.error("Scenario update error:", data.error);
-        return;
-    }
-    await generateOneReading(sensorId);
+    if (data.success) await generateOneReading(sensorId);
 }
 
-// 6. Update top 4 summary cards
 function updateSummaryCards(sensors) {
     let online = 0, warning = 0, offline = 0;
     sensors.forEach(s => {
@@ -570,23 +457,15 @@ function updateSummaryCards(sensors) {
     document.getElementById("offlineSensors").textContent = String(offline).padStart(2, "0");
 }
 
-// 7. Search and status filter
 function filterSensors() {
     const searchText = document.getElementById("sensorSearch").value.toLowerCase();
     const selectedStatus = document.getElementById("statusFilter").value;
-    const rows = document.querySelectorAll("#sensorTable tr");
-
-    rows.forEach(function (row) {
+    document.querySelectorAll("#sensorTable tr").forEach(row => {
         if (!row.dataset.status) return;
-        const rowText = row.textContent.toLowerCase();
-        const rowStatus = row.dataset.status;
-
-        const matchesSearch = rowText.includes(searchText);
-        const matchesStatus = selectedStatus === "all" || rowStatus === selectedStatus;
-
+        const matchesSearch = row.textContent.toLowerCase().includes(searchText);
+        const matchesStatus = selectedStatus === "all" || row.dataset.status === selectedStatus;
         row.style.display = matchesSearch && matchesStatus ? "" : "none";
     });
 }
-
 </script>
 {% endblock %}
