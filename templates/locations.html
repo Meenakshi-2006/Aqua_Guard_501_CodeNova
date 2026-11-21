@@ -3,12 +3,12 @@
 {% block title %}Locations | AquaGuard{% endblock %}
 
 {% block page_title %}
-Monitored Locations
+Monitored Campus Locations
 {% endblock %}
 
 {% block styles %}
 <style>
-.location-intro {
+.locations-intro {
     margin-bottom: 25px;
     display: flex;
     justify-content: space-between;
@@ -16,10 +16,10 @@ Monitored Locations
     flex-wrap: wrap;
     gap: 12px;
 }
-.location-intro h2 { color: #12345a; font-size: 25px; margin-bottom: 8px; }
-.location-intro p { color: #64748b; }
+.locations-intro h2 { color: #12345a; font-size: 25px; margin-bottom: 8px; }
+.locations-intro p { color: #64748b; }
 
-.btn-sync {
+.btn-primary {
     background: #2196f3;
     color: white;
     border: none;
@@ -29,9 +29,8 @@ Monitored Locations
     font-weight: 600;
     cursor: pointer;
 }
-.btn-sync:hover { background: #1976d2; }
+.btn-primary:hover { background: #1976d2; }
 
-/* ADD NEW LOCATION PANEL (ADMIN ONLY) */
 .add-location-panel {
     background: white;
     padding: 20px;
@@ -40,7 +39,7 @@ Monitored Locations
     box-shadow: 0 3px 12px rgba(15,39,71,0.05);
     margin-bottom: 25px;
 }
-.add-location-panel h3 { color: #12345a; font-size: 17px; margin-bottom: 12px; }
+.add-location-panel h3 { color: #12345a; font-size: 17px; margin-bottom: 14px; }
 .add-location-form { display: flex; gap: 12px; flex-wrap: wrap; }
 .add-location-form input,
 .add-location-form select {
@@ -52,126 +51,117 @@ Monitored Locations
     flex: 1;
     min-width: 180px;
 }
-.loc-feedback {
-    margin-top: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    display: none;
-}
 
-.location-summary {
+.locations-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 18px;
     margin-bottom: 25px;
 }
-.location-card {
+.loc-card {
     background: white;
     padding: 22px;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
     border-left: 5px solid #2196f3;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
 }
-.location-card:nth-child(2) { border-left-color: #16a34a; }
-.location-card:nth-child(3) { border-left-color: #ef4444; }
-.location-card:nth-child(4) { border-left-color: #f59e0b; }
-.location-card h3 { color: #64748b; font-size: 14px; margin-bottom: 12px; }
-.location-card h2 { color: #12345a; font-size: 27px; }
+.loc-card:nth-child(2) { border-left-color: #16a34a; }
+.loc-card:nth-child(3) { border-left-color: #ef4444; }
+.loc-card:nth-child(4) { border-left-color: #f59e0b; }
+.loc-card h3 { color: #64748b; font-size: 14px; margin-bottom: 12px; }
+.loc-card h2 { color: #12345a; font-size: 27px; }
 
-.location-panel {
+.locations-panel {
     background: white;
     padding: 25px;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 3px 12px rgba(15,39,71,0.05);
 }
-.location-panel h3 { color: #12345a; font-size: 20px; margin-bottom: 20px; }
+.locations-panel h3 { color: #12345a; font-size: 20px; margin-bottom: 20px; }
 
-.location-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.location-filters input,
-.location-filters select {
-    padding: 12px;
+.loc-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.loc-filters input,
+.loc-filters select {
+    padding: 11px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 14px;
     background: white;
 }
-.location-filters input { flex: 2; min-width: 180px; }
-.location-filters select { flex: 1; min-width: 150px; }
+.loc-filters input { flex: 2; min-width: 180px; }
+.loc-filters select { flex: 1; min-width: 150px; }
 
-.location-table-wrapper { width: 100%; overflow-x: auto; }
-.location-table { width: 100%; min-width: 780px; border-collapse: collapse; text-align: left; }
-.location-table th { background: #edf5fb; color: #12345a; padding: 15px; font-size: 14px; }
-.location-table td { padding: 16px 15px; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 14px; }
-.location-table tr:hover { background: #f8fafc; }
+.loc-table-wrapper { width: 100%; overflow-x: auto; }
+.loc-table { width: 100%; min-width: 720px; border-collapse: collapse; text-align: left; }
+.loc-table th { background: #edf5fb; color: #12345a; padding: 14px; font-size: 14px; }
+.loc-table td { padding: 15px 14px; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 14px; }
+.loc-table tr:hover { background: #f8fafc; }
 
-.loc-status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+.status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 .normal { background: #dcfce7; color: #15803d; }
-.leak { background: #fee2e2; color: #dc2626; }
 .warning { background: #fef3c7; color: #b45309; }
-.unassigned { background: #f1f5f9; color: #475569; }
-.location-note { color: #64748b; font-size: 13px; margin-top: 15px; }
+.leakage { background: #fee2e2; color: #dc2626; }
+.unassigned { background: #e2e8f0; color: #475569; }
 
-@media(max-width: 950px) { .location-summary { grid-template-columns: repeat(2, 1fr); } }
-@media(max-width: 600px) { .location-summary { grid-template-columns: 1fr; } }
+@media(max-width: 950px) { .locations-summary { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width: 600px) { .locations-summary { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
 
 
 {% block content %}
 
-<div class="location-intro">
+<div class="locations-intro">
     <div>
         <h2>📍 Monitored Locations</h2>
-        <p>Add distinct campus zones/buildings and monitor water consumption across each location.</p>
+        <p id="locSubtitle">Track water consumption, active sensor coverage, and pipeline health across every campus zone.</p>
     </div>
-    <button class="btn-sync" onclick="syncLocationsFromBackend()">🔄 Sync Location Status</button>
 </div>
 
-<!-- ADD NEW DISTINCT LOCATION (ADMIN ONLY) -->
-<div class="add-location-panel" id="addLocationPanel">
-    <h3>➕ Register New Location / Building Zone</h3>
+<!-- ADD NEW LOCATION (ADMIN ONLY) -->
+<div class="add-location-panel admin-only" id="addLocationPanel">
+    <h3>Add New Monitored Location</h3>
     <div class="add-location-form">
-        <input type="text" id="newLocationName" placeholder="New Location Name (e.g., Library Block, Boys Hostel C)">
-        <select id="newLocationType">
+        <input type="text" id="newLocName" placeholder="Location Name (e.g., Library Block)">
+        <select id="newLocType">
             <option value="Residential Block">Residential Block</option>
-            <option value="Academic / Admin">Academic / Admin</option>
             <option value="Tank / Pump House">Tank / Pump House</option>
             <option value="Cafeteria / Utility">Cafeteria / Utility</option>
+            <option value="Academic / Library">Academic / Library</option>
+            <option value="Monitored Zone">Monitored Zone</option>
         </select>
-        <button class="btn-sync" onclick="addNewDistinctLocation()">Add Location</button>
+        <button class="btn-primary" onclick="addLocation()">+ Add Location</button>
     </div>
-    <div class="loc-feedback" id="locationFeedback"></div>
 </div>
 
 <!-- SUMMARY CARDS -->
-<div class="location-summary">
-    <div class="location-card"><h3>Total Locations</h3><h2 id="totalLocations">00</h2></div>
-    <div class="location-card"><h3>Normal Locations</h3><h2 id="normalLocations">00</h2></div>
-    <div class="location-card"><h3>Leakage Detected</h3><h2 id="leakLocations">00</h2></div>
-    <div class="location-card"><h3>Warning Locations</h3><h2 id="warningLocations">00</h2></div>
+<div class="locations-summary">
+    <div class="loc-card"><h3>Total Locations</h3><h2 id="totalLocations">00</h2></div>
+    <div class="loc-card"><h3>Normal Locations</h3><h2 id="normalLocations">00</h2></div>
+    <div class="loc-card"><h3>Leakage Detected</h3><h2 id="leakageLocations">00</h2></div>
+    <div class="loc-card"><h3>Warning Locations</h3><h2 id="warningLocations">00</h2></div>
 </div>
 
-<!-- LOCATION TABLE -->
-<div class="location-panel">
+<!-- LOCATION DETAILS TABLE -->
+<div class="locations-panel">
     <h3>Location Details</h3>
 
-    <div class="location-filters">
+    <div class="loc-filters">
         <input type="text" id="locationSearch" placeholder="Search location...">
         <select id="locationStatusFilter">
             <option value="all">All Locations</option>
             <option value="normal">Normal</option>
-            <option value="leak">Leakage Detected</option>
             <option value="warning">Warning</option>
-            <option value="unassigned">No Sensor Yet</option>
+            <option value="leakage">Leakage</option>
         </select>
     </div>
 
-    <div class="location-table-wrapper">
-        <table class="location-table">
+    <div class="loc-table-wrapper">
+        <table class="loc-table">
             <thead>
                 <tr>
-                    <th>Location ID</th>
                     <th>Location Name</th>
                     <th>Zone Type</th>
                     <th>Active Sensors</th>
@@ -182,15 +172,11 @@ Monitored Locations
             </thead>
             <tbody id="locationTable">
                 <tr>
-                    <td colspan="7" style="text-align:center; color:#64748b;">Loading locations...</td>
+                    <td colspan="6" style="text-align:center; color:#64748b;">Loading campus locations...</td>
                 </tr>
             </tbody>
         </table>
     </div>
-
-    <p class="location-note">
-        Every newly registered location automatically becomes available in <strong>Virtual Sensors</strong> and <strong>Resident Registration</strong>.
-    </p>
 </div>
 
 {% endblock %}
@@ -198,199 +184,171 @@ Monitored Locations
 
 {% block scripts %}
 <script>
-const DEFAULT_LOCATIONS = [
-    { name: "Main Gate Inlet", type: "Tank / Pump House" },
-    { name: "Hostel Block A", type: "Residential Block" },
-    { name: "Hostel Block B Tank", type: "Tank / Pump House" },
-    { name: "Mess & Kitchen", type: "Cafeteria / Utility" }
-];
+const DEFAULT_ZONE_TYPES = {
+    "main gate inlet": "Tank / Pump House",
+    "hostel block a": "Residential Block",
+    "hostel block b tank": "Tank / Pump House",
+    "mess & kitchen": "Cafeteria / Utility"
+};
 
-function getStoredLocations() {
-    let saved = [];
-    try {
-        saved = JSON.parse(localStorage.getItem("aquaguard_custom_locations") || "[]");
-    } catch (e) {}
-
-    // Merge defaults + custom distinct locations without duplicates
-    const merged = [...DEFAULT_LOCATIONS];
-    saved.forEach(item => {
-        const exists = merged.some(m => m.name.toLowerCase() === item.name.toLowerCase());
-        if (!exists) merged.push(item);
-    });
-    return merged;
+function getCurrentUser() {
+    try { return JSON.parse(localStorage.getItem("aquaguard_user") || "{}"); }
+    catch (e) { return {}; }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    // Hide Add Location panel if user is Management or Resident
-    try {
-        const user = JSON.parse(localStorage.getItem("aquaguard_user") || "{}");
-        if (user.role && user.role !== "admin") {
-            const panel = document.getElementById("addLocationPanel");
-            if (panel) panel.style.display = "none";
-        }
-    } catch (e) {}
-
-    syncLocationsFromBackend();
+    const user = getCurrentUser();
+    if (user.role && user.role !== "admin") {
+        document.querySelectorAll(".admin-only").forEach(el => el.style.display = "none");
+    }
+    loadLocationsFromBackend();
     document.getElementById("locationSearch").addEventListener("input", filterLocations);
     document.getElementById("locationStatusFilter").addEventListener("change", filterLocations);
 });
 
-async function addNewDistinctLocation() {
-    const nameInput = document.getElementById("newLocationName");
-    const typeSelect = document.getElementById("newLocationType");
-    const feedback = document.getElementById("locationFeedback");
-
-    const rawName = nameInput.value.trim();
-    const zoneType = typeSelect.value;
-
-    feedback.style.display = "block";
-
-    if (!rawName) {
-        feedback.style.color = "#dc2626";
-        feedback.textContent = "⚠️ Please enter a location name.";
-        return;
-    }
-
-    // Check against all existing locations (case-insensitive) so we NEVER duplicate an existing location
-    const existingList = getStoredLocations();
-    const isDuplicate = existingList.some(loc => loc.name.toLowerCase() === rawName.toLowerCase());
-
-    if (isDuplicate) {
-        feedback.style.color = "#dc2626";
-        feedback.textContent = `❌ "${rawName}" already exists! Please enter a new, different location name.`;
-        return;
-    }
-
-    // Save to backend API if available, and persist in localStorage so dropdowns update immediately
+async function loadLocationsFromBackend() {
     try {
-        await fetch("/api/locations", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: rawName, type: zoneType })
+        const [locRes, senRes] = await Promise.all([
+            fetch("/api/locations"),
+            fetch("/api/sensors")
+        ]);
+        const locData = await locRes.json();
+        const senData = await senRes.json();
+
+        let locations = locData.locations || [];
+        let sensors = senData.sensors || [];
+
+        const user = getCurrentUser();
+        if (user.role === "resident" && user.location_id) {
+            locations = locations.filter(l => l.name.toLowerCase() === user.location_id.toLowerCase());
+            sensors = sensors.filter(s => s.location_id.toLowerCase() === user.location_id.toLowerCase());
+            document.getElementById("locSubtitle").textContent =
+                `Showing assigned water zone telemetry for: ${user.location_id}`;
+        }
+
+        // Ensure any sensor location missing from locations table is also included
+        sensors.forEach(s => {
+            if (!locations.some(l => l.name.toLowerCase() === s.location_id.toLowerCase())) {
+                locations.push({ name: s.location_id, type: "Monitored Zone" });
+            }
         });
-    } catch (e) {}
 
-    const custom = JSON.parse(localStorage.getItem("aquaguard_custom_locations") || "[]");
-    custom.push({ name: rawName, type: zoneType });
-    localStorage.setItem("aquaguard_custom_locations", JSON.stringify(custom));
-
-    nameInput.value = "";
-    feedback.style.color = "#15803d";
-    feedback.textContent = `✅ New distinct location "${rawName}" added! You can now assign sensors to it in Virtual Sensors.`;
-
-    syncLocationsFromBackend();
-}
-
-async function syncLocationsFromBackend() {
-    try {
-        const sRes = await fetch("/api/sensors");
-        const sData = await sRes.json();
-        const sensors = sData.sensors || [];
-
-        let allLocations = getStoredLocations();
-
-        // Also pull any backend /api/locations if teammate has added them
-        try {
-            const lRes = await fetch("/api/locations");
-            if (lRes.ok) {
-                const lData = await lRes.json();
-                if (lData.success && Array.isArray(lData.locations)) {
-                    lData.locations.forEach(item => {
-                        const locName = typeof item === "string" ? item : item.name;
-                        const locType = typeof item === "string" ? "Monitored Zone" : (item.type || "Monitored Zone");
-                        if (locName && !allLocations.some(m => m.name.toLowerCase() === locName.toLowerCase())) {
-                            allLocations.push({ name: locName, type: locType });
-                        }
-                    });
-                }
+        // Fetch readings per sensor
+        const readingsMap = {};
+        for (const s of sensors) {
+            try {
+                const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+                const rData = await rRes.json();
+                readingsMap[s.sensor_id] = rData.readings || [];
+            } catch (e) {
+                readingsMap[s.sensor_id] = [];
             }
-        } catch (e) {}
-
-        // Filter to resident's block if logged in as resident
-        try {
-            const user = JSON.parse(localStorage.getItem("aquaguard_user") || "{}");
-            if (user.role === "resident" && user.location_id) {
-                allLocations = allLocations.filter(l => l.name.toLowerCase() === user.location_id.toLowerCase());
-            }
-        } catch (e) {}
+        }
 
         const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak"];
         const tbody = document.getElementById("locationTable");
         tbody.innerHTML = "";
 
-        let normalCount = 0, leakCount = 0, warningCount = 0;
+        let normalCount = 0;
+        let leakageCount = 0;
+        let warningCount = 0;
 
-        for (let idx = 0; idx < allLocations.length; idx++) {
-            const locObj = allLocations[idx];
-            const locSensors = sensors.filter(s => s.location_id.toLowerCase() === locObj.name.toLowerCase());
+        locations.forEach(loc => {
+            const locSensors = sensors.filter(s => s.location_id.toLowerCase() === loc.name.toLowerCase());
+            const zoneType = DEFAULT_ZONE_TYPES[loc.name.toLowerCase()] || loc.type || "Monitored Zone";
 
             let totalConsumption = 0;
             let currentFlow = 0;
-            let hasBurst = false;
+            let hasLeakage = false;
             let hasWarning = false;
 
-            for (const s of locSensors) {
-                const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
-                const rData = await rRes.json();
-                const readings = rData.readings || [];
-
-                readings.forEach(r => {
+            locSensors.forEach(s => {
+                const rList = readingsMap[s.sensor_id] || [];
+                rList.forEach(r => {
                     totalConsumption += Number(r.flow_rate ?? r.flow ?? 0);
                 });
 
-                const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+                const latest = rList.length > 0 ? rList[rList.length - 1] : null;
                 const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
+                const baseline = Number(s.normal_flow || 60);
                 currentFlow += flow;
 
-                if (s.scenario === "burst" || s.scenario === "burst_leak" || flow > 150) hasBurst = true;
-                else if (leakScenarios.includes(s.scenario) || flow > 110) hasWarning = true;
-            }
+                // Compare against sensor scenario and normal_flow baseline (not hardcoded thresholds)
+                const isBurst = s.scenario === "burst" || s.scenario === "burst_leak" || (s.scenario !== "normal" && flow > baseline * 1.8);
+                const isLeak = leakScenarios.includes(s.scenario) || (s.scenario !== "normal" && flow > baseline * 1.3);
 
-            let statusKey = "unassigned";
-            let statusLabel = "No Sensor Yet";
+                if (isBurst) hasLeakage = true;
+                else if (isLeak) hasWarning = true;
+            });
 
-            if (locSensors.length > 0) {
-                if (hasBurst) {
-                    statusKey = "leak";
-                    statusLabel = "Leakage";
-                    leakCount++;
-                } else if (hasWarning) {
-                    statusKey = "warning";
-                    statusLabel = "Warning";
-                    warningCount++;
-                } else {
-                    statusKey = "normal";
-                    statusLabel = "Normal";
-                    normalCount++;
-                }
+            let statusKey = "normal";
+            let statusLabel = "Normal";
+            if (locSensors.length === 0) {
+                statusKey = "unassigned";
+                statusLabel = "No Sensor";
+            } else if (hasLeakage) {
+                statusKey = "leakage";
+                statusLabel = "Leakage";
+                leakageCount++;
+            } else if (hasWarning) {
+                statusKey = "warning";
+                statusLabel = "Warning";
+                warningCount++;
+            } else {
+                normalCount++;
             }
 
             const sensorTag = locSensors.length > 0
-                ? `${locObj.name} (${locSensors.map(s => s.sensor_id).join(", ")})`
-                : locObj.name;
+                ? ` (${locSensors.map(s => s.sensor_id).join(", ")})`
+                : "";
 
             const tr = document.createElement("tr");
             tr.dataset.status = statusKey;
             tr.innerHTML = `
-                <td><strong>LOC${String(idx + 1).padStart(3, "0")}</strong></td>
-                <td>${sensorTag}</td>
-                <td>${locObj.type}</td>
+                <td><strong>${loc.name}${sensorTag}</strong></td>
+                <td>${zoneType}</td>
                 <td>${locSensors.length}</td>
                 <td>${totalConsumption.toFixed(1)} L</td>
                 <td>${currentFlow.toFixed(1)} L/hr</td>
-                <td><span class="loc-status ${statusKey}">${statusLabel}</span></td>
+                <td><span class="status-badge ${statusKey}">${statusLabel}</span></td>
             `;
             tbody.appendChild(tr);
-        }
+        });
 
-        document.getElementById("totalLocations").textContent = String(allLocations.length).padStart(2, "0");
+        document.getElementById("totalLocations").textContent = String(locations.length).padStart(2, "0");
         document.getElementById("normalLocations").textContent = String(normalCount).padStart(2, "0");
-        document.getElementById("leakLocations").textContent = String(leakCount).padStart(2, "0");
+        document.getElementById("leakageLocations").textContent = String(leakageCount).padStart(2, "0");
         document.getElementById("warningLocations").textContent = String(warningCount).padStart(2, "0");
 
         filterLocations();
     } catch (err) {
-        console.error("Location sync error:", err);
+        console.error("Locations load error:", err);
+    }
+}
+
+async function addLocation() {
+    const nameInput = document.getElementById("newLocName");
+    const typeSelect = document.getElementById("newLocType");
+    const name = nameInput.value.trim();
+    const type = typeSelect.value;
+
+    if (!name) {
+        alert("Please enter a location name.");
+        nameInput.focus();
+        return;
+    }
+
+    const res = await fetch("/api/locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, type })
+    });
+    const data = await res.json();
+    if (data.success) {
+        nameInput.value = "";
+        loadLocationsFromBackend();
+    } else {
+        alert(data.error || "Could not add location.");
     }
 }
 

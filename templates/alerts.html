@@ -93,7 +93,7 @@ Leakage Detection Center
 
 <!-- SUMMARY CARDS -->
 <div class="alerts-summary">
-    <div class="alert-card"><h3>Total Alerts</h3><h2 id="totalAlerts">00</h2></div>
+    <div class="alert-card"><h3>Active Alerts (Open)</h3><h2 id="totalAlerts">00</h2></div>
     <div class="alert-card"><h3>High Severity (Open)</h3><h2 id="highAlerts">00</h2></div>
     <div class="alert-card"><h3>Medium Severity (Open)</h3><h2 id="mediumAlerts">00</h2></div>
     <div class="alert-card"><h3>Resolved Alerts</h3><h2 id="resolvedAlerts">00</h2></div>
@@ -264,7 +264,7 @@ async function scanAlertsFromBackend() {
             });
         }
 
-        document.getElementById("totalAlerts").textContent = String(rows.length).padStart(2, "0");
+        document.getElementById("totalAlerts").textContent = String(highOpen + mediumOpen).padStart(2, "0");
         document.getElementById("highAlerts").textContent = String(highOpen).padStart(2, "0");
         document.getElementById("mediumAlerts").textContent = String(mediumOpen).padStart(2, "0");
         document.getElementById("resolvedAlerts").textContent = String(resolvedCount).padStart(2, "0");
