@@ -138,20 +138,16 @@ Virtual Sensor Monitoring
 
 .status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 .online { background: #dcfce7; color: #15803d; }
-.offline { background: #fee2e2; color: #dc2626; }
+.offline { background: #e2e8f0; color: #475569; }
 .warning { background: #fef3c7; color: #b45309; }
+.burst { background: #fee2e2; color: #dc2626; }
 .demo-note { margin-top: 18px; color: #64748b; font-size: 13px; }
 
-@media (max-width: 1000px) {
-    .sensor-summary { grid-template-columns: repeat(2, 1fr); }
-}
-
+@media (max-width: 1000px) { .sensor-summary { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) {
     .sensor-summary { grid-template-columns: 1fr; }
     .sensor-controls { flex-direction: column; }
-    .sensor-controls input,
-    .sensor-controls select { width: 100%; }
-    .sensor-panel { padding: 15px; }
+    .sensor-controls input, .sensor-controls select { width: 100%; }
 }
 </style>
 {% endblock %}
@@ -187,7 +183,7 @@ Virtual Sensor Monitoring
 <div class="sensor-summary">
     <div class="sensor-card"><h3>Total Sensors</h3><h2 id="totalSensors">00</h2></div>
     <div class="sensor-card"><h3>Online Sensors</h3><h2 id="onlineSensors">00</h2></div>
-    <div class="sensor-card"><h3>Warning Sensors</h3><h2 id="warningSensors">00</h2></div>
+    <div class="sensor-card"><h3>Warning / Leak</h3><h2 id="warningSensors">00</h2></div>
     <div class="sensor-card"><h3>Offline Sensors</h3><h2 id="offlineSensors">00</h2></div>
 </div>
 
@@ -199,7 +195,7 @@ Virtual Sensor Monitoring
         <select id="statusFilter">
             <option value="all">All Sensors</option>
             <option value="online">Online</option>
-            <option value="warning">Warning</option>
+            <option value="warning">Warning / Leak</option>
             <option value="offline">Offline</option>
         </select>
     </div>
@@ -317,13 +313,10 @@ async function populateLocationDropdown(selectedValue = "") {
         const opt = document.createElement("option");
         opt.value = loc;
         opt.textContent = loc;
-        if (selectedValue && loc.toLowerCase() === selectedValue.toLowerCase()) {
-            opt.selected = true;
-        }
+        if (selectedValue && loc.toLowerCase() === selectedValue.toLowerCase()) opt.selected = true;
         select.appendChild(opt);
     });
 
-    // Special option at the bottom to create a brand-new location right from this form
     const newOpt = document.createElement("option");
     newOpt.value = "__NEW_LOCATION__";
     newOpt.textContent = "➕ + Add New Location...";
@@ -394,12 +387,15 @@ async function loadSensorsFromBackend() {
             const flowVal = reading ? (reading.flow_rate ?? reading.flow ?? 0) : 0;
             const pressureVal = reading ? (reading.pressure ?? 2.2) : 0;
             const currentScenario = normalizeScenario(s.scenario);
-            const isWarning = currentScenario !== "normal";
-            const statusKey = !reading ? "offline" : (isWarning ? "warning" : "online");
-            const statusLabel = !reading ? "Ready" : (isWarning ? "Leak Alert" : "Online");
+            const isBurst = currentScenario === "burst_leak";
+            const isWarning = currentScenario !== "normal" && !isBurst;
+
+            const filterStatus = !reading ? "offline" : (currentScenario !== "normal" ? "warning" : "online");
+            const badgeClass = !reading ? "offline" : (isBurst ? "burst" : (isWarning ? "warning" : "online"));
+            const statusLabel = !reading ? "Ready" : (isBurst ? "Pipe Burst" : (isWarning ? "Leak Alert" : "Online"));
 
             const tr = document.createElement("tr");
-            tr.dataset.status = statusKey;
+            tr.dataset.status = filterStatus;
             tr.innerHTML = `
                 <td><strong>${s.sensor_id}</strong></td>
                 <td>${s.location_id}</td>
@@ -413,7 +409,7 @@ async function loadSensorsFromBackend() {
                         <option value="burst_leak" ${currentScenario === "burst_leak" ? "selected" : ""}>Pipe Burst</option>
                     </select>
                 </td>
-                <td><span class="status ${statusKey}">${statusLabel}</span></td>
+                <td><span class="status ${badgeClass}">${statusLabel}</span></td>
                 <td>
                     ${isAdmin
                         ? `<button class="btn-small" onclick="generateOneReading('${s.sensor_id}')">▶ Pulse Reading</button>`
@@ -438,7 +434,6 @@ async function addNewSensor() {
 
     let locationId = select.value;
 
-    // If user chose "+ Add New Location...", validate and register the new distinct location first
     if (locationId === "__NEW_LOCATION__") {
         const newLocName = customInput.value.trim();
         if (!newLocName) {
@@ -448,13 +443,11 @@ async function addNewSensor() {
         }
 
         const existingLocations = getAllKnownLocations();
-        const isDuplicate = existingLocations.some(l => l.toLowerCase() === newLocName.toLowerCase());
-        if (isDuplicate) {
+        if (existingLocations.some(l => l.toLowerCase() === newLocName.toLowerCase())) {
             alert(`"${newLocName}" already exists! Please select it from the dropdown or enter a different new location.`);
             return;
         }
 
-        // Save new distinct location
         try {
             await fetch("/api/locations", {
                 method: "POST",
@@ -493,6 +486,9 @@ async function addNewSensor() {
 }
 
 async function seedDemoSensors() {
+    localStorage.removeItem("aquaguard_completed_inspections");
+    localStorage.removeItem("aquaguard_resolved_alerts_log");
+
     const demos = [
         { sensor_id: "VS-01", location_id: "Main Gate Inlet", normal_flow: 180 },
         { sensor_id: "VS-02", location_id: "Hostel Block A", normal_flow: 65 },
@@ -521,6 +517,14 @@ async function generateOneReading(sensorId) {
 }
 
 async function changeScenario(sensorId, scenario) {
+    if (scenario !== "normal") {
+        try {
+            const completedMap = JSON.parse(localStorage.getItem("aquaguard_completed_inspections") || "{}");
+            delete completedMap[sensorId];
+            localStorage.setItem("aquaguard_completed_inspections", JSON.stringify(completedMap));
+        } catch (e) {}
+    }
+
     const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/scenario`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
