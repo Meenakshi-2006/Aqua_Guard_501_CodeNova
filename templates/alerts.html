@@ -426,6 +426,7 @@ async function scanLiveSensorsForLeaks() {
         const sData = await sRes.json();
         const sensors = sData.sensors || [];
 
+        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak"];
         let detectedAlerts = [];
 
         for (const s of sensors) {
@@ -435,11 +436,12 @@ async function scanLiveSensorsForLeaks() {
             const latest = readings.length > 0 ? readings[readings.length - 1] : null;
             const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
 
-            const isLeakScenario = s.scenario === "leak" || s.scenario === "burst";
+            const isLeakScenario = leakScenarios.includes(s.scenario);
             const isHighFlow = flow > 110;
 
             if (isLeakScenario || isHighFlow) {
-                const severity = (s.scenario === "burst" || flow > 150) ? "high" : "medium";
+                const isBurst = s.scenario === "burst" || s.scenario === "burst_leak" || flow > 150;
+                const severity = isBurst ? "high" : "medium";
                 const alertId = "AL-" + s.sensor_id;
                 const currentStatus = resolvedStatusMap[alertId] || "pending";
 

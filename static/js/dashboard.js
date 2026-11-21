@@ -17,6 +17,8 @@ async function loadDashboardData() {
         let chartValues = [];
         let recentAlerts = [];
 
+        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak"];
+
         for (const s of sensors) {
             const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
             const rData = await rRes.json();
@@ -37,11 +39,12 @@ async function loadDashboardData() {
             chartLabels.push(`${s.location_id} (${s.sensor_id})`);
             chartValues.push(Number(latestFlow.toFixed(1)));
 
-            const isLeak = s.scenario === "leak" || s.scenario === "burst" || latestFlow > 110;
+            const isLeak = leakScenarios.includes(s.scenario) || latestFlow > 110;
             if (isLeak) {
                 possibleLeaks++;
-                const severity = (s.scenario === "burst" || latestFlow > 150) ? "High" : "Medium";
-                const dailyLoss = s.scenario === "burst" ? Math.round(latestFlow * 6) : Math.round(latestFlow * 4);
+                const isBurst = s.scenario === "burst" || s.scenario === "burst_leak" || latestFlow > 150;
+                const severity = isBurst ? "High" : "Medium";
+                const dailyLoss = isBurst ? Math.round(latestFlow * 6) : Math.round(latestFlow * 4);
                 estimatedLoss += dailyLoss;
 
                 recentAlerts.push({

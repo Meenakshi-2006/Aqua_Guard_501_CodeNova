@@ -394,6 +394,15 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("statusFilter").addEventListener("change", filterSensors);
 });
 
+// Normalize any scenario name to match backend values
+function normalizeScenario(raw) {
+    if (!raw) return "normal";
+    if (raw === "leak" || raw === "continuous_leak") return "continuous_leak";
+    if (raw === "burst" || raw === "burst_leak") return "burst_leak";
+    if (raw === "gradual" || raw === "gradual_leak") return "gradual_leak";
+    return "normal";
+}
+
 // 1. Fetch all sensors from GET /api/sensors
 async function loadSensorsFromBackend() {
     try {
@@ -432,7 +441,7 @@ async function loadSensorsFromBackend() {
             const reading = latestReadingsMap[s.sensor_id];
             const flowVal = reading ? (reading.flow_rate ?? reading.flow ?? 0) : 0;
             const pressureVal = reading ? (reading.pressure ?? 2.2) : 0;
-            const currentScenario = s.scenario || "normal";
+            const currentScenario = normalizeScenario(s.scenario);
             const isWarning = currentScenario !== "normal";
             const statusKey = !reading ? "offline" : (isWarning ? "warning" : "online");
             const statusLabel = !reading ? "Ready" : (isWarning ? "Leak Alert" : "Online");
@@ -447,8 +456,9 @@ async function loadSensorsFromBackend() {
                 <td>
                     <select class="scenario-select" onchange="changeScenario('${s.sensor_id}', this.value)">
                         <option value="normal" ${currentScenario === "normal" ? "selected" : ""}>Normal Flow</option>
-                        <option value="leak" ${currentScenario === "leak" ? "selected" : ""}>Continuous Leak</option>
-                        <option value="burst" ${currentScenario === "burst" ? "selected" : ""}>Pipe Burst</option>
+                        <option value="continuous_leak" ${currentScenario === "continuous_leak" ? "selected" : ""}>Continuous Leak</option>
+                        <option value="gradual_leak" ${currentScenario === "gradual_leak" ? "selected" : ""}>Gradual Leak</option>
+                        <option value="burst_leak" ${currentScenario === "burst_leak" ? "selected" : ""}>Pipe Burst</option>
                     </select>
                 </td>
                 <td><span class="status ${statusKey}">${statusLabel}</span></td>
@@ -537,7 +547,7 @@ async function changeScenario(sensorId, scenario) {
     });
     const data = await res.json();
     if (!data.success) {
-        alert(data.error || "Could not update scenario");
+        console.error("Scenario update error:", data.error);
         return;
     }
     await generateOneReading(sensorId);
@@ -548,8 +558,9 @@ function updateSummaryCards(sensors) {
     let online = 0, warning = 0, offline = 0;
     sensors.forEach(s => {
         const hasReading = !!latestReadingsMap[s.sensor_id];
+        const norm = normalizeScenario(s.scenario);
         if (!hasReading) offline++;
-        else if (s.scenario && s.scenario !== "normal") warning++;
+        else if (norm !== "normal") warning++;
         else online++;
     });
 
