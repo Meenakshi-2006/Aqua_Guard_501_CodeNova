@@ -1,0 +1,402 @@
+
+{% extends "base.html" %}
+
+{% block title %}Virtual Sensors | AquaGuard{% endblock %}
+
+{% block page_title %}
+Virtual Sensor Monitoring
+{% endblock %}
+
+{% block styles %}
+<style>
+
+/* PAGE HEADER */
+.sensor-intro {
+    margin-bottom: 25px;
+}
+
+.sensor-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.sensor-intro p {
+    color: #64748b;
+}
+
+/* SUMMARY CARDS */
+.sensor-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.sensor-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.sensor-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.sensor-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.sensor-card:nth-child(2) {
+    border-left-color: #22a06b;
+}
+
+.sensor-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.sensor-card:nth-child(4) {
+    border-left-color: #ef5350;
+}
+
+/* SENSOR TABLE PANEL */
+.sensor-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.sensor-panel h3 {
+    color: #12345a;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+/* SEARCH AND FILTER */
+.sensor-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.sensor-controls input,
+.sensor-controls select {
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.sensor-controls input {
+    width: 65%;
+}
+
+.sensor-controls select {
+    width: 35%;
+    background: white;
+}
+
+/* TABLE */
+.sensor-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.sensor-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 650px;
+    text-align: left;
+}
+
+.sensor-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.sensor-table td {
+    padding: 16px 15px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+.sensor-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* STATUS LABELS */
+.status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.online {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.offline {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+/* HEALTH INDICATOR */
+.health-good {
+    color: #16a34a;
+    font-weight: bold;
+}
+
+.health-medium {
+    color: #d97706;
+    font-weight: bold;
+}
+
+.health-poor {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* NOTE */
+.demo-note {
+    margin-top: 18px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+    .sensor-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .sensor-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .sensor-controls {
+        flex-direction: column;
+    }
+
+    .sensor-controls input,
+    .sensor-controls select {
+        width: 100%;
+    }
+
+    .sensor-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+<div class="sensor-intro">
+
+    <h2>💧 Virtual Sensor Monitoring</h2>
+
+    <p>
+        Monitor water flow, pressure and sensor health
+        across different locations.
+    </p>
+
+</div>
+
+
+<!-- SENSOR SUMMARY -->
+<div class="sensor-summary">
+
+    <div class="sensor-card">
+        <h3>Total Sensors</h3>
+        <h2 id="totalSensors">05</h2>
+    </div>
+
+    <div class="sensor-card">
+        <h3>Online Sensors</h3>
+        <h2 id="onlineSensors">03</h2>
+    </div>
+
+    <div class="sensor-card">
+        <h3>Warning Sensors</h3>
+        <h2 id="warningSensors">01</h2>
+    </div>
+
+    <div class="sensor-card">
+        <h3>Offline Sensors</h3>
+        <h2 id="offlineSensors">01</h2>
+    </div>
+
+</div>
+
+
+<!-- SENSOR TABLE -->
+<div class="sensor-panel">
+
+    <h3>Sensor Details</h3>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="sensor-controls">
+
+        <input
+            type="text"
+            id="sensorSearch"
+            placeholder="Search sensor ID or location..."
+        >
+
+        <select id="statusFilter">
+            <option value="all">All Sensors</option>
+            <option value="online">Online</option>
+            <option value="warning">Warning</option>
+            <option value="offline">Offline</option>
+        </select>
+
+    </div>
+
+
+    <!-- TABLE -->
+    <div class="sensor-table-wrapper">
+
+        <table class="sensor-table">
+
+            <thead>
+                <tr>
+                    <th>Sensor ID</th>
+                    <th>Location</th>
+                    <th>Flow Rate</th>
+                    <th>Pressure</th>
+                    <th>Health</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="sensorTable">
+
+                <tr data-status="online">
+                    <td>SG001</td>
+                    <td>Hostel A</td>
+                    <td>85 L/hour</td>
+                    <td>2.5 bar</td>
+                    <td class="health-good">Good</td>
+                    <td><span class="status online">Online</span></td>
+                </tr>
+
+                <tr data-status="online">
+                    <td>SG002</td>
+                    <td>Hostel B</td>
+                    <td>65 L/hour</td>
+                    <td>2.2 bar</td>
+                    <td class="health-good">Good</td>
+                    <td><span class="status online">Online</span></td>
+                </tr>
+
+                <tr data-status="warning">
+                    <td>SG003</td>
+                    <td>College Block</td>
+                    <td>120 L/hour</td>
+                    <td>3.8 bar</td>
+                    <td class="health-medium">Moderate</td>
+                    <td><span class="status warning">Warning</span></td>
+                </tr>
+
+                <tr data-status="offline">
+                    <td>SG004</td>
+                    <td>Library</td>
+                    <td>0 L/hour</td>
+                    <td>0 bar</td>
+                    <td class="health-poor">Poor</td>
+                    <td><span class="status offline">Offline</span></td>
+                </tr>
+
+                <tr data-status="online">
+                    <td>SG005</td>
+                    <td>Admin Block</td>
+                    <td>55 L/hour</td>
+                    <td>2.0 bar</td>
+                    <td class="health-good">Good</td>
+                    <td><span class="status online">Online</span></td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p class="demo-note">
+        Note: The displayed sensor readings are sample demonstration
+        data. Actual readings will be connected through the backend API.
+    </p>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+// SENSOR SEARCH AND FILTER
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("sensorSearch");
+    const statusFilter = document.getElementById("statusFilter");
+    const rows = document.querySelectorAll("#sensorTable tr");
+
+    function filterSensors() {
+
+        const searchText = searchInput.value.toLowerCase();
+        const selectedStatus = statusFilter.value;
+
+        rows.forEach(function (row) {
+
+            const rowText = row.textContent.toLowerCase();
+            const rowStatus = row.dataset.status;
+
+            const matchesSearch = rowText.includes(searchText);
+
+            const matchesStatus =
+                selectedStatus === "all" ||
+                rowStatus === selectedStatus;
+
+            row.style.display =
+                matchesSearch && matchesStatus ? "" : "none";
+
+        });
+    }
+
+    searchInput.addEventListener("input", filterSensors);
+    statusFilter.addEventListener("change", filterSensors);
+
+});
+
+</script>
+
+{% endblock %}

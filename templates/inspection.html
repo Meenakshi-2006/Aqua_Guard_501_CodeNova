@@ -1,0 +1,474 @@
+
+{% extends "base.html" %}
+
+{% block title %}Inspection | AquaGuard{% endblock %}
+
+{% block page_title %}
+Inspection Management
+{% endblock %}
+
+{% block styles %}
+<style>
+.inspection-intro {
+    margin-bottom: 25px;
+}
+
+.inspection-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.inspection-intro p {
+    color: #64748b;
+}
+
+.inspection-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.inspection-card {
+    background: white;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+    border-radius: 12px;
+}
+
+.inspection-card:nth-child(2) {
+    border-left-color: #ef4444;
+}
+
+.inspection-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.inspection-card:nth-child(4) {
+    border-left-color: #16a36a;
+}
+
+.inspection-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.inspection-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.inspection-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.inspection-panel h3 {
+    color: #12345a;
+    margin-bottom: 20px;
+}
+
+.inspection-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.inspection-filters input,
+.inspection-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.inspection-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.inspection-filters select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.inspection-table-wrapper {
+    overflow-x: auto;
+}
+
+.inspection-table {
+    width: 100%;
+    min-width: 750px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.inspection-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+}
+
+.inspection-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+.priority {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.priority-high {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.priority-medium {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.priority-low {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.action-btn {
+    background: #123f70;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 13px;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #1e5a91;
+}
+
+.action-btn:disabled {
+    background: #16a36a;
+    cursor: default;
+}
+
+.inspection-note {
+    background: #eff6ff;
+    border-left: 5px solid #2196f3;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.inspection-note h3 {
+    color: #12345a;
+    margin-bottom: 10px;
+}
+
+.inspection-note p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+@media(max-width: 950px) {
+    .inspection-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .inspection-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .inspection-panel {
+        padding: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="inspection-intro">
+    <h2>🔍 Smart Inspection Management</h2>
+    <p>
+        Identify high-risk locations and prioritize
+        maintenance activities to reduce water loss.
+    </p>
+</div>
+
+
+<!-- SUMMARY CARDS -->
+
+<div class="inspection-summary">
+
+    <div class="inspection-card">
+        <h3>Total Inspections</h3>
+        <h2 id="totalInspections">05</h2>
+    </div>
+
+    <div class="inspection-card">
+        <h3>High Priority</h3>
+        <h2 id="highPriority">02</h2>
+    </div>
+
+    <div class="inspection-card">
+        <h3>Medium Priority</h3>
+        <h2 id="mediumPriority">02</h2>
+    </div>
+
+    <div class="inspection-card">
+        <h3>Completed</h3>
+        <h2 id="completedCount">01</h2>
+    </div>
+
+</div>
+
+
+<!-- INSPECTION TABLE -->
+
+<div class="inspection-panel">
+
+    <h3>Inspection Priority Ranking</h3>
+
+    <div class="inspection-filters">
+
+        <input
+            type="text"
+            id="inspectionSearch"
+            placeholder="Search location or inspection ID..."
+        >
+
+        <select id="priorityFilter">
+            <option value="all">All Priorities</option>
+            <option value="high">High Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="low">Low Priority</option>
+        </select>
+
+    </div>
+
+
+    <div class="inspection-table-wrapper">
+
+        <table class="inspection-table">
+
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Inspection ID</th>
+                    <th>Location</th>
+                    <th>Estimated Water Loss</th>
+                    <th>Priority</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="inspectionTable">
+
+                <tr data-priority="high">
+                    <td>1</td>
+                    <td>IN001</td>
+                    <td>Hostel A</td>
+                    <td>850 L/day</td>
+                    <td>
+                        <span class="priority priority-high">High</span>
+                    </td>
+                    <td>
+                        <button class="action-btn"
+                            onclick="completeInspection(this)">
+                            Inspect
+                        </button>
+                    </td>
+                </tr>
+
+                <tr data-priority="high">
+                    <td>2</td>
+                    <td>IN002</td>
+                    <td>College Block</td>
+                    <td>720 L/day</td>
+                    <td>
+                        <span class="priority priority-high">High</span>
+                    </td>
+                    <td>
+                        <button class="action-btn"
+                            onclick="completeInspection(this)">
+                            Inspect
+                        </button>
+                    </td>
+                </tr>
+
+                <tr data-priority="medium">
+                    <td>3</td>
+                    <td>IN003</td>
+                    <td>Hostel B</td>
+                    <td>450 L/day</td>
+                    <td>
+                        <span class="priority priority-medium">Medium</span>
+                    </td>
+                    <td>
+                        <button class="action-btn"
+                            onclick="completeInspection(this)">
+                            Inspect
+                        </button>
+                    </td>
+                </tr>
+
+                <tr data-priority="medium">
+                    <td>4</td>
+                    <td>IN004</td>
+                    <td>Library</td>
+                    <td>300 L/day</td>
+                    <td>
+                        <span class="priority priority-medium">Medium</span>
+                    </td>
+                    <td>
+                        <button class="action-btn"
+                            onclick="completeInspection(this)">
+                            Inspect
+                        </button>
+                    </td>
+                </tr>
+
+                <tr data-priority="low">
+                    <td>5</td>
+                    <td>IN005</td>
+                    <td>Admin Block</td>
+                    <td>100 L/day</td>
+                    <td>
+                        <span class="priority priority-low">Low</span>
+                    </td>
+                    <td>
+                        <button class="action-btn"
+                            onclick="completeInspection(this)">
+                            Inspect
+                        </button>
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p style="margin-top:15px;color:#64748b;font-size:13px;">
+        Sample inspection records for demonstration.
+    </p>
+
+</div>
+
+
+<!-- RECOMMENDATIONS -->
+
+<div class="inspection-panel">
+
+    <div class="inspection-note">
+
+        <h3>💡 Inspection Recommendations</h3>
+
+        <p>
+            <strong>High Priority:</strong>
+            Inspect immediately and check for major pipeline leakage.
+        </p>
+
+        <p>
+            <strong>Medium Priority:</strong>
+            Schedule inspection and monitor unusual flow patterns.
+        </p>
+
+        <p>
+            <strong>Low Priority:</strong>
+            Continue regular monitoring and preventive maintenance.
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const search =
+        document.getElementById("inspectionSearch");
+
+    const filter =
+        document.getElementById("priorityFilter");
+
+    const rows =
+        document.querySelectorAll("#inspectionTable tr");
+
+
+    // SEARCH AND FILTER
+
+    function filterInspections() {
+
+        const searchValue = search.value.toLowerCase();
+        const priorityValue = filter.value;
+
+        rows.forEach(function(row) {
+
+            const text = row.textContent.toLowerCase();
+            const priority = row.dataset.priority;
+
+            const matchesSearch =
+                text.includes(searchValue);
+
+            const matchesPriority =
+                priorityValue === "all" ||
+                priority === priorityValue;
+
+            row.style.display =
+                matchesSearch && matchesPriority ? "" : "none";
+
+        });
+
+    }
+
+    search.addEventListener("input", filterInspections);
+    filter.addEventListener("change", filterInspections);
+
+});
+
+
+// MARK INSPECTION AS COMPLETED
+
+function completeInspection(button) {
+
+    const row = button.closest("tr");
+
+    button.textContent = "Completed";
+    button.disabled = true;
+
+    row.style.background = "#f0fdf4";
+
+    const completed =
+        document.getElementById("completedCount");
+
+    completed.textContent =
+        String(Number(completed.textContent) + 1);
+
+}
+
+</script>
+
+{% endblock %}
