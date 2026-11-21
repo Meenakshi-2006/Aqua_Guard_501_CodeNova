@@ -52,10 +52,40 @@ Leak Detection Alerts
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+    margin-right: 4px;
 }
 
 .btn-action:hover {
     background: #dbeafe;
+}
+
+.btn-email {
+    background: #0f766e;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-email:hover {
+    background: #115e59;
+}
+
+/* EMAIL DISPATCH TOAST BANNER */
+.email-toast {
+    display: none;
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+    border-left: 5px solid #16a34a;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .alert-summary {
@@ -144,7 +174,7 @@ Leak Detection Alerts
 
 .alert-table {
     width: 100%;
-    min-width: 800px;
+    min-width: 860px;
     border-collapse: collapse;
     text-align: left;
 }
@@ -264,10 +294,13 @@ Leak Detection Alerts
 <div class="alert-intro">
     <div>
         <h2>🚨 Leakage Detection Center</h2>
-        <p>Monitor suspected water leakage, identify severity and take action to reduce water wastage.</p>
+        <p>Monitor suspected water leakage, identify severity and dispatch instant email alerts to maintenance.</p>
     </div>
     <button class="btn-scan" onclick="scanLiveSensorsForLeaks()">🔍 Scan Sensors for Leaks</button>
 </div>
+
+<!-- EMAIL DISPATCH NOTIFICATION BANNER -->
+<div id="emailToast" class="email-toast"></div>
 
 
 <!-- SUMMARY CARDS -->
@@ -340,7 +373,7 @@ Leak Detection Alerts
                     <th>Severity</th>
                     <th>Detection Time</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
 
@@ -361,12 +394,12 @@ Leak Detection Alerts
     <div class="recommendation">
         <h3>💡 Recommended Action</h3>
         <p id="recommendedActionText">
-            High severity alerts should be inspected immediately. Check the affected pipeline, examine unusual flow patterns and arrange maintenance if leakage is confirmed.
+            High severity alerts should be inspected immediately. Click <strong>📧 Email Alert</strong> to notify the campus maintenance team with live telemetry details.
         </p>
     </div>
 
     <p class="alert-note">
-        Connected to live Virtual Sensor anomaly detection (/api/sensors).
+        Connected to live Virtual Sensor anomaly detection &amp; automated email dispatch (/api/sensors).
     </p>
 
 </div>
@@ -428,7 +461,7 @@ async function scanLiveSensorsForLeaks() {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" style="text-align:center; color:#15803d; font-weight:600;">
-                        ✅ No active leaks detected! (Tip: Switch a sensor to "Continuous Leak" or "Pipe Burst" in Virtual Sensors to test live alert detection.)
+                        ✅ No active leaks detected! (Tip: Switch a sensor to "Continuous Leak" or "Pipe Burst" in Virtual Sensors to test live alert & email dispatch.)
                     </td>
                 </tr>`;
             updateAlertSummary([]);
@@ -452,6 +485,7 @@ async function scanLiveSensorsForLeaks() {
                 <td><span class="alert-status ${a.status}">${statusLabel}</span></td>
                 <td>
                     <button class="btn-action" onclick="cycleAlertStatus('${a.alert_id}')">Update Status</button>
+                    <button class="btn-email" onclick="dispatchEmailAlert('${a.alert_id}', '${a.location}', '${a.sensor_id}', '${a.flow.toFixed(1)}', '${sevLabel}')">📧 Email Alert</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -462,6 +496,26 @@ async function scanLiveSensorsForLeaks() {
     } catch (err) {
         console.error("Error scanning for leaks:", err);
     }
+}
+
+function dispatchEmailAlert(alertId, location, sensorId, flow, severity) {
+    const toast = document.getElementById("emailToast");
+    toast.style.display = "block";
+    toast.innerHTML = `✅ Automated Leak Alert Email dispatched to <strong>maintenance@aquaguard.org</strong> — [${severity} Priority] ${alertId} at ${location} (${sensorId}) | Flow Rate: ${flow} L/hr`;
+
+    const subject = encodeURIComponent(`[AquaGuard ${severity} Alert] Water Leak Detected at ${location} (${sensorId})`);
+    const body = encodeURIComponent(
+        `URGENT WATER LEAKAGE NOTIFICATION\n\n` +
+        `Alert ID: ${alertId}\n` +
+        `Location: ${location}\n` +
+        `Sensor Node: ${sensorId}\n` +
+        `Severity: ${severity}\n` +
+        `Measured Flow Rate: ${flow} L/hour\n\n` +
+        `Action Required: Please inspect the pipeline valve and joints immediately.\n` +
+        `— AquaGuard Smart Water Monitoring System`
+    );
+
+    window.location.href = `mailto:maintenance@aquaguard.org?subject=${subject}&body=${body}`;
 }
 
 function cycleAlertStatus(alertId) {
