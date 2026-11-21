@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 
 from datetime import datetime, timezone
 
@@ -64,3 +66,4 @@ class Location(Base):
             "address": self.address,
         }
 >>>>>>> 00611ea25a561e5195be5805c83264be922e4988
+>>>>>>> 91e46f88b20ea47e324ad904b27769a21f9a9ab8
