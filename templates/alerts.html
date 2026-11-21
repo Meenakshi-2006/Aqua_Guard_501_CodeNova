@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Leak Alerts | AquaGuard{% endblock %}
@@ -12,6 +11,11 @@ Leak Detection Alerts
 
 .alert-intro {
     margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .alert-intro h2 {
@@ -22,6 +26,36 @@ Leak Detection Alerts
 
 .alert-intro p {
     color: #64748b;
+}
+
+.btn-scan {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-scan:hover {
+    background: #dc2626;
+}
+
+.btn-action {
+    background: #edf5fb;
+    color: #12345a;
+    border: 1px solid #cbd5e1;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-action:hover {
+    background: #dbeafe;
 }
 
 .alert-summary {
@@ -110,7 +144,7 @@ Leak Detection Alerts
 
 .alert-table {
     width: 100%;
-    min-width: 750px;
+    min-width: 800px;
     border-collapse: collapse;
     text-align: left;
 }
@@ -228,14 +262,11 @@ Leak Detection Alerts
 
 <!-- INTRODUCTION -->
 <div class="alert-intro">
-
-    <h2>🚨 Leakage Detection Center</h2>
-
-    <p>
-        Monitor suspected water leakage, identify severity
-        and take action to reduce water wastage.
-    </p>
-
+    <div>
+        <h2>🚨 Leakage Detection Center</h2>
+        <p>Monitor suspected water leakage, identify severity and take action to reduce water wastage.</p>
+    </div>
+    <button class="btn-scan" onclick="scanLiveSensorsForLeaks()">🔍 Scan Sensors for Leaks</button>
 </div>
 
 
@@ -244,22 +275,22 @@ Leak Detection Alerts
 
     <div class="alert-card">
         <h3>Total Alerts</h3>
-        <h2 id="totalAlerts">05</h2>
+        <h2 id="totalAlerts">00</h2>
     </div>
 
     <div class="alert-card">
         <h3>High Severity</h3>
-        <h2 id="highAlerts">02</h2>
+        <h2 id="highAlerts">00</h2>
     </div>
 
     <div class="alert-card">
         <h3>Medium Severity</h3>
-        <h2 id="mediumAlerts">02</h2>
+        <h2 id="mediumAlerts">00</h2>
     </div>
 
     <div class="alert-card">
         <h3>Resolved Alerts</h3>
-        <h2 id="resolvedAlerts">01</h2>
+        <h2 id="resolvedAlerts">00</h2>
     </div>
 
 </div>
@@ -309,61 +340,16 @@ Leak Detection Alerts
                     <th>Severity</th>
                     <th>Detection Time</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
 
             <tbody id="alertTable">
-
-                <tr data-severity="high"
-                    data-status="pending">
-                    <td>AL001</td>
-                    <td>Hostel A</td>
-                    <td>85 L/hour</td>
-                    <td><span class="severity high">High</span></td>
-                    <td>08:30 AM</td>
-                    <td><span class="alert-status pending">Pending</span></td>
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#64748b;">
+                        Scanning virtual sensors for leak anomalies...
+                    </td>
                 </tr>
-
-                <tr data-severity="medium"
-                    data-status="in-progress">
-                    <td>AL002</td>
-                    <td>Hostel B</td>
-                    <td>65 L/hour</td>
-                    <td><span class="severity medium">Medium</span></td>
-                    <td>09:15 AM</td>
-                    <td><span class="alert-status in-progress">In Progress</span></td>
-                </tr>
-
-                <tr data-severity="high"
-                    data-status="pending">
-                    <td>AL003</td>
-                    <td>College Block</td>
-                    <td>150 L/hour</td>
-                    <td><span class="severity high">High</span></td>
-                    <td>10:20 AM</td>
-                    <td><span class="alert-status pending">Pending</span></td>
-                </tr>
-
-                <tr data-severity="medium"
-                    data-status="resolved">
-                    <td>AL004</td>
-                    <td>Library</td>
-                    <td>45 L/hour</td>
-                    <td><span class="severity medium">Medium</span></td>
-                    <td>11:00 AM</td>
-                    <td><span class="alert-status resolved">Resolved</span></td>
-                </tr>
-
-                <tr data-severity="low"
-                    data-status="pending">
-                    <td>AL005</td>
-                    <td>Admin Block</td>
-                    <td>25 L/hour</td>
-                    <td><span class="severity low">Low</span></td>
-                    <td>12:10 PM</td>
-                    <td><span class="alert-status pending">Pending</span></td>
-                </tr>
-
             </tbody>
 
         </table>
@@ -373,21 +359,14 @@ Leak Detection Alerts
 
     <!-- RECOMMENDED ACTION -->
     <div class="recommendation">
-
         <h3>💡 Recommended Action</h3>
-
-        <p>
-            High severity alerts should be inspected immediately.
-            Check the affected pipeline, examine unusual flow
-            patterns and arrange maintenance if leakage is confirmed.
+        <p id="recommendedActionText">
+            High severity alerts should be inspected immediately. Check the affected pipeline, examine unusual flow patterns and arrange maintenance if leakage is confirmed.
         </p>
-
     </div>
 
     <p class="alert-note">
-        Note: These are sample demonstration alerts.
-        Actual alerts will be generated using the backend
-        leakage detection system.
+        Connected to live Virtual Sensor anomaly detection (/api/sensors).
     </p>
 
 </div>
@@ -396,77 +375,135 @@ Leak Detection Alerts
 
 
 {% block scripts %}
-
 <script>
 
+let resolvedStatusMap = {};
+
 document.addEventListener("DOMContentLoaded", function () {
+    scanLiveSensorsForLeaks();
 
-    const searchInput =
-        document.getElementById("alertSearch");
-
-    const severityFilter =
-        document.getElementById("severityFilter");
-
-    const statusFilter =
-        document.getElementById("alertStatusFilter");
-
-    const rows =
-        document.querySelectorAll("#alertTable tr");
-
-    function filterAlerts() {
-
-        const search =
-            searchInput.value.toLowerCase();
-
-        const severity =
-            severityFilter.value;
-
-        const status =
-            statusFilter.value;
-
-        rows.forEach(function (row) {
-
-            const text =
-                row.textContent.toLowerCase();
-
-            const rowSeverity =
-                row.dataset.severity;
-
-            const rowStatus =
-                row.dataset.status;
-
-            const searchMatch =
-                text.includes(search);
-
-            const severityMatch =
-                severity === "all" ||
-                rowSeverity === severity;
-
-            const statusMatch =
-                status === "all" ||
-                rowStatus === status;
-
-            row.style.display =
-                searchMatch && severityMatch && statusMatch
-                ? ""
-                : "none";
-
-        });
-
-    }
-
-    searchInput.addEventListener("input", filterAlerts);
-
-    severityFilter.addEventListener(
-        "change", filterAlerts
-    );
-
-    statusFilter.addEventListener(
-        "change", filterAlerts
-    );
-
+    document.getElementById("alertSearch").addEventListener("input", filterAlerts);
+    document.getElementById("severityFilter").addEventListener("change", filterAlerts);
+    document.getElementById("alertStatusFilter").addEventListener("change", filterAlerts);
 });
 
-</script>
+async function scanLiveSensorsForLeaks() {
+    try {
+        const sRes = await fetch("/api/sensors");
+        const sData = await sRes.json();
+        const sensors = sData.sensors || [];
 
+        let detectedAlerts = [];
+
+        for (const s of sensors) {
+            const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+            const rData = await rRes.json();
+            const readings = rData.readings || [];
+            const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+            const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
+
+            const isLeakScenario = s.scenario === "leak" || s.scenario === "burst";
+            const isHighFlow = flow > 110;
+
+            if (isLeakScenario || isHighFlow) {
+                const severity = (s.scenario === "burst" || flow > 150) ? "high" : "medium";
+                const alertId = "AL-" + s.sensor_id;
+                const currentStatus = resolvedStatusMap[alertId] || "pending";
+
+                detectedAlerts.push({
+                    alert_id: alertId,
+                    sensor_id: s.sensor_id,
+                    location: s.location_id,
+                    flow: flow,
+                    severity: severity,
+                    time: latest && latest.timestamp ? latest.timestamp : new Date().toLocaleTimeString(),
+                    status: currentStatus
+                });
+            }
+        }
+
+        const tbody = document.getElementById("alertTable");
+
+        if (detectedAlerts.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#15803d; font-weight:600;">
+                        ✅ No active leaks detected! (Tip: Switch a sensor to "Continuous Leak" or "Pipe Burst" in Virtual Sensors to test live alert detection.)
+                    </td>
+                </tr>`;
+            updateAlertSummary([]);
+            return;
+        }
+
+        tbody.innerHTML = "";
+        detectedAlerts.forEach(a => {
+            const sevLabel = a.severity === "high" ? "High" : "Medium";
+            const statusLabel = a.status === "resolved" ? "Resolved" : (a.status === "in-progress" ? "In Progress" : "Pending");
+
+            const tr = document.createElement("tr");
+            tr.dataset.severity = a.severity;
+            tr.dataset.status = a.status;
+            tr.innerHTML = `
+                <td><strong>${a.alert_id}</strong></td>
+                <td>${a.location} (${a.sensor_id})</td>
+                <td><strong>${a.flow.toFixed(1)} L/hour</strong></td>
+                <td><span class="severity ${a.severity}">${sevLabel}</span></td>
+                <td>${a.time}</td>
+                <td><span class="alert-status ${a.status}">${statusLabel}</span></td>
+                <td>
+                    <button class="btn-action" onclick="cycleAlertStatus('${a.alert_id}')">Update Status</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateAlertSummary(detectedAlerts);
+        filterAlerts();
+    } catch (err) {
+        console.error("Error scanning for leaks:", err);
+    }
+}
+
+function cycleAlertStatus(alertId) {
+    const current = resolvedStatusMap[alertId] || "pending";
+    if (current === "pending") resolvedStatusMap[alertId] = "in-progress";
+    else if (current === "in-progress") resolvedStatusMap[alertId] = "resolved";
+    else resolvedStatusMap[alertId] = "pending";
+
+    scanLiveSensorsForLeaks();
+}
+
+function updateAlertSummary(alerts) {
+    const total = alerts.length;
+    const high = alerts.filter(a => a.severity === "high").length;
+    const medium = alerts.filter(a => a.severity === "medium").length;
+    const resolved = alerts.filter(a => a.status === "resolved").length;
+
+    document.getElementById("totalAlerts").textContent = String(total).padStart(2, "0");
+    document.getElementById("highAlerts").textContent = String(high).padStart(2, "0");
+    document.getElementById("mediumAlerts").textContent = String(medium).padStart(2, "0");
+    document.getElementById("resolvedAlerts").textContent = String(resolved).padStart(2, "0");
+}
+
+function filterAlerts() {
+    const search = document.getElementById("alertSearch").value.toLowerCase();
+    const severity = document.getElementById("severityFilter").value;
+    const status = document.getElementById("alertStatusFilter").value;
+    const rows = document.querySelectorAll("#alertTable tr");
+
+    rows.forEach(function (row) {
+        if (!row.dataset.severity) return;
+        const text = row.textContent.toLowerCase();
+        const rowSeverity = row.dataset.severity;
+        const rowStatus = row.dataset.status;
+
+        const searchMatch = text.includes(search);
+        const severityMatch = severity === "all" || rowSeverity === severity;
+        const statusMatch = status === "all" || rowStatus === status;
+
+        row.style.display = searchMatch && severityMatch && statusMatch ? "" : "none";
+    });
+}
+
+</script>
 {% endblock %}

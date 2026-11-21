@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Virtual Sensors | AquaGuard{% endblock %}
@@ -13,6 +12,11 @@ Virtual Sensor Monitoring
 /* PAGE HEADER */
 .sensor-intro {
     margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
 .sensor-intro h2 {
@@ -23,6 +27,68 @@ Virtual Sensor Monitoring
 
 .sensor-intro p {
     color: #64748b;
+}
+
+/* ACTION BUTTONS */
+.btn-primary {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: #1976d2;
+}
+
+.btn-small {
+    background: #edf5fb;
+    color: #12345a;
+    border: 1px solid #cbd5e1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-small:hover {
+    background: #dbeafe;
+}
+
+/* ADD SENSOR BAR */
+.add-sensor-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+    margin-bottom: 25px;
+}
+
+.add-sensor-panel h3 {
+    color: #12345a;
+    font-size: 17px;
+    margin-bottom: 14px;
+}
+
+.add-sensor-form {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.add-sensor-form input {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 160px;
 }
 
 /* SUMMARY CARDS */
@@ -115,7 +181,7 @@ Virtual Sensor Monitoring
 .sensor-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 650px;
+    min-width: 720px;
     text-align: left;
 }
 
@@ -135,6 +201,14 @@ Virtual Sensor Monitoring
 
 .sensor-table tbody tr:hover {
     background: #f8fafc;
+}
+
+.scenario-select {
+    padding: 6px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
 }
 
 /* STATUS LABELS */
@@ -218,38 +292,45 @@ Virtual Sensor Monitoring
 
 <!-- INTRODUCTION -->
 <div class="sensor-intro">
-
-    <h2>💧 Virtual Sensor Monitoring</h2>
-
-    <p>
-        Monitor water flow, pressure and sensor health
-        across different locations.
-    </p>
-
+    <div>
+        <h2>💧 Virtual Sensor Monitoring</h2>
+        <p>Monitor water flow, pressure and virtual sensor health across different locations.</p>
+    </div>
+    <button class="btn-primary" onclick="seedDemoSensors()">+ Load 4 Demo Virtual Sensors</button>
 </div>
 
+<!-- ADD NEW VIRTUAL SENSOR -->
+<div class="add-sensor-panel">
+    <h3>Add Virtual Sensor Node</h3>
+    <div class="add-sensor-form">
+        <input type="text" id="newSensorId" placeholder="Sensor ID (e.g., VS-01)">
+        <input type="text" id="newLocationId" placeholder="Location (e.g., Hostel Block A)">
+        <input type="number" id="newNormalFlow" placeholder="Normal Flow L/h (e.g., 45)" value="45">
+        <button class="btn-primary" onclick="addNewSensor()">Add Sensor</button>
+    </div>
+</div>
 
 <!-- SENSOR SUMMARY -->
 <div class="sensor-summary">
 
     <div class="sensor-card">
         <h3>Total Sensors</h3>
-        <h2 id="totalSensors">05</h2>
+        <h2 id="totalSensors">00</h2>
     </div>
 
     <div class="sensor-card">
         <h3>Online Sensors</h3>
-        <h2 id="onlineSensors">03</h2>
+        <h2 id="onlineSensors">00</h2>
     </div>
 
     <div class="sensor-card">
         <h3>Warning Sensors</h3>
-        <h2 id="warningSensors">01</h2>
+        <h2 id="warningSensors">00</h2>
     </div>
 
     <div class="sensor-card">
         <h3>Offline Sensors</h3>
-        <h2 id="offlineSensors">01</h2>
+        <h2 id="offlineSensors">00</h2>
     </div>
 
 </div>
@@ -258,7 +339,7 @@ Virtual Sensor Monitoring
 <!-- SENSOR TABLE -->
 <div class="sensor-panel">
 
-    <h3>Sensor Details</h3>
+    <h3>Live Virtual Sensor Nodes</h3>
 
     <!-- SEARCH AND FILTER -->
     <div class="sensor-controls">
@@ -290,67 +371,26 @@ Virtual Sensor Monitoring
                     <th>Location</th>
                     <th>Flow Rate</th>
                     <th>Pressure</th>
-                    <th>Health</th>
+                    <th>Scenario Mode</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
 
             <tbody id="sensorTable">
-
-                <tr data-status="online">
-                    <td>SG001</td>
-                    <td>Hostel A</td>
-                    <td>85 L/hour</td>
-                    <td>2.5 bar</td>
-                    <td class="health-good">Good</td>
-                    <td><span class="status online">Online</span></td>
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#64748b;">
+                        No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!
+                    </td>
                 </tr>
-
-                <tr data-status="online">
-                    <td>SG002</td>
-                    <td>Hostel B</td>
-                    <td>65 L/hour</td>
-                    <td>2.2 bar</td>
-                    <td class="health-good">Good</td>
-                    <td><span class="status online">Online</span></td>
-                </tr>
-
-                <tr data-status="warning">
-                    <td>SG003</td>
-                    <td>College Block</td>
-                    <td>120 L/hour</td>
-                    <td>3.8 bar</td>
-                    <td class="health-medium">Moderate</td>
-                    <td><span class="status warning">Warning</span></td>
-                </tr>
-
-                <tr data-status="offline">
-                    <td>SG004</td>
-                    <td>Library</td>
-                    <td>0 L/hour</td>
-                    <td>0 bar</td>
-                    <td class="health-poor">Poor</td>
-                    <td><span class="status offline">Offline</span></td>
-                </tr>
-
-                <tr data-status="online">
-                    <td>SG005</td>
-                    <td>Admin Block</td>
-                    <td>55 L/hour</td>
-                    <td>2.0 bar</td>
-                    <td class="health-good">Good</td>
-                    <td><span class="status online">Online</span></td>
-                </tr>
-
             </tbody>
 
         </table>
 
     </div>
 
-    <p class="demo-note">
-        Note: The displayed sensor readings are sample demonstration
-        data. Actual readings will be connected through the backend API.
+    <p class="demo-note" id="sensorStatusMsg">
+        Connected to Backend Virtual Sensor Engine (/api/sensors).
     </p>
 
 </div>
@@ -359,44 +399,193 @@ Virtual Sensor Monitoring
 
 
 {% block scripts %}
-
 <script>
 
-// SENSOR SEARCH AND FILTER
+let latestReadingsMap = {};
 
 document.addEventListener("DOMContentLoaded", function () {
+    loadSensorsFromBackend();
 
-    const searchInput = document.getElementById("sensorSearch");
-    const statusFilter = document.getElementById("statusFilter");
-    const rows = document.querySelectorAll("#sensorTable tr");
-
-    function filterSensors() {
-
-        const searchText = searchInput.value.toLowerCase();
-        const selectedStatus = statusFilter.value;
-
-        rows.forEach(function (row) {
-
-            const rowText = row.textContent.toLowerCase();
-            const rowStatus = row.dataset.status;
-
-            const matchesSearch = rowText.includes(searchText);
-
-            const matchesStatus =
-                selectedStatus === "all" ||
-                rowStatus === selectedStatus;
-
-            row.style.display =
-                matchesSearch && matchesStatus ? "" : "none";
-
-        });
-    }
-
-    searchInput.addEventListener("input", filterSensors);
-    statusFilter.addEventListener("change", filterSensors);
-
+    document.getElementById("sensorSearch").addEventListener("input", filterSensors);
+    document.getElementById("statusFilter").addEventListener("change", filterSensors);
 });
 
-</script>
+// 1. Fetch all sensors from GET /api/sensors
+async function loadSensorsFromBackend() {
+    try {
+        const res = await fetch("/api/sensors");
+        const data = await res.json();
 
+        if (!data.success) return;
+
+        const sensors = data.sensors || [];
+        const tbody = document.getElementById("sensorTable");
+
+        if (sensors.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#64748b;">
+                        No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!
+                    </td>
+                </tr>`;
+            updateSummaryCards([]);
+            return;
+        }
+
+        // Fetch latest reading for each sensor
+        for (const s of sensors) {
+            try {
+                const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+                const rData = await rRes.json();
+                if (rData.success && rData.readings && rData.readings.length > 0) {
+                    latestReadingsMap[s.sensor_id] = rData.readings[rData.readings.length - 1];
+                }
+            } catch (e) {}
+        }
+
+        tbody.innerHTML = "";
+        sensors.forEach(s => {
+            const reading = latestReadingsMap[s.sensor_id];
+            const flowVal = reading ? (reading.flow_rate ?? reading.flow ?? 0) : 0;
+            const pressureVal = reading ? (reading.pressure ?? 2.2) : 0;
+            const isWarning = s.scenario && s.scenario !== "normal";
+            const statusKey = !reading ? "offline" : (isWarning ? "warning" : "online");
+            const statusLabel = !reading ? "Ready" : (isWarning ? "Leak Alert" : "Online");
+
+            const tr = document.createElement("tr");
+            tr.dataset.status = statusKey;
+            tr.innerHTML = `
+                <td><strong>${s.sensor_id}</strong></td>
+                <td>${s.location_id}</td>
+                <td>${Number(flowVal).toFixed(1)} L/hour</td>
+                <td>${Number(pressureVal).toFixed(1)} bar</td>
+                <td>
+                    <select class="scenario-select" onchange="changeScenario('${s.sensor_id}', this.value)">
+                        <option value="normal" ${s.scenario === "normal" ? "selected" : ""}>Normal Flow</option>
+                        <option value="leak" ${s.scenario === "leak" ? "selected" : ""}>Continuous Leak</option>
+                        <option value="burst" ${s.scenario === "burst" ? "selected" : ""}>Pipe Burst</option>
+                    </select>
+                </td>
+                <td><span class="status ${statusKey}">${statusLabel}</span></td>
+                <td>
+                    <button class="btn-small" onclick="generateOneReading('${s.sensor_id}')">▶ Pulse Reading</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateSummaryCards(sensors);
+        filterSensors();
+    } catch (err) {
+        console.error("Failed to load sensors:", err);
+    }
+}
+
+// 2. Add a single virtual sensor via POST /api/sensors
+async function addNewSensor() {
+    const sensorId = document.getElementById("newSensorId").value.trim();
+    const locationId = document.getElementById("newLocationId").value.trim();
+    const normalFlow = parseFloat(document.getElementById("newNormalFlow").value) || 40;
+
+    if (!sensorId || !locationId) {
+        alert("Please enter both Sensor ID and Location.");
+        return;
+    }
+
+    const res = await fetch("/api/sensors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            sensor_id: sensorId,
+            location_id: locationId,
+            normal_flow: normalFlow
+        })
+    });
+    const data = await res.json();
+    if (data.success) {
+        await generateOneReading(sensorId);
+        document.getElementById("newSensorId").value = "";
+        document.getElementById("newLocationId").value = "";
+    } else {
+        alert(data.error || "Could not add sensor");
+    }
+}
+
+// 3. One-click load 4 demo virtual sensors for presentation
+async function seedDemoSensors() {
+    const demos = [
+        { sensor_id: "VS-01", location_id: "Main Gate Inlet", normal_flow: 180 },
+        { sensor_id: "VS-02", location_id: "Hostel Block A", normal_flow: 65 },
+        { sensor_id: "VS-03", location_id: "Hostel Block B Tank", normal_flow: 85 },
+        { sensor_id: "VS-04", location_id: "Mess & Kitchen", normal_flow: 50 }
+    ];
+
+    for (const d of demos) {
+        await fetch("/api/sensors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(d)
+        });
+        await fetch(`/api/sensors/${encodeURIComponent(d.sensor_id)}/readings`, { method: "POST" });
+    }
+    loadSensorsFromBackend();
+}
+
+// 4. Generate a new reading via POST /api/sensors/<id>/readings
+async function generateOneReading(sensorId) {
+    const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/readings`, {
+        method: "POST"
+    });
+    const data = await res.json();
+    if (data.success && data.reading) {
+        latestReadingsMap[sensorId] = data.reading;
+        loadSensorsFromBackend();
+    }
+}
+
+// 5. Switch sensor scenario via POST /api/sensors/<id>/scenario
+async function changeScenario(sensorId, scenario) {
+    await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/scenario`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario: scenario })
+    });
+    await generateOneReading(sensorId);
+}
+
+// 6. Update top 4 summary cards
+function updateSummaryCards(sensors) {
+    let online = 0, warning = 0, offline = 0;
+    sensors.forEach(s => {
+        const hasReading = !!latestReadingsMap[s.sensor_id];
+        if (!hasReading) offline++;
+        else if (s.scenario && s.scenario !== "normal") warning++;
+        else online++;
+    });
+
+    document.getElementById("totalSensors").textContent = String(sensors.length).padStart(2, "0");
+    document.getElementById("onlineSensors").textContent = String(online).padStart(2, "0");
+    document.getElementById("warningSensors").textContent = String(warning).padStart(2, "0");
+    document.getElementById("offlineSensors").textContent = String(offline).padStart(2, "0");
+}
+
+// 7. Search and status filter
+function filterSensors() {
+    const searchText = document.getElementById("sensorSearch").value.toLowerCase();
+    const selectedStatus = document.getElementById("statusFilter").value;
+    const rows = document.querySelectorAll("#sensorTable tr");
+
+    rows.forEach(function (row) {
+        if (!row.dataset.status) return;
+        const rowText = row.textContent.toLowerCase();
+        const rowStatus = row.dataset.status;
+
+        const matchesSearch = rowText.includes(searchText);
+        const matchesStatus = selectedStatus === "all" || rowStatus === selectedStatus;
+
+        row.style.display = matchesSearch && matchesStatus ? "" : "none";
+    });
+}
+
+</script>
 {% endblock %}

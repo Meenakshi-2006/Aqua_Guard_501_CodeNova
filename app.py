@@ -1,11 +1,12 @@
-<<<<<<< HEAD
-
 from flask import Flask, render_template
 from backend.routes.dashboard import dashboard_bp
+from backend.routes.sensor import sensor_bp
 
 app = Flask(__name__)
 
+# Register Backend Blueprints
 app.register_blueprint(dashboard_bp)
+app.register_blueprint(sensor_bp)
 
 # =====================================
 # AQUAGUARD - PAGE ROUTES
@@ -66,13 +67,3 @@ def settings():
 
 if __name__ == "__main__":
     app.run(debug=True)
-=======
-from flask import Flask
-from backend.routes.sensor import sensor_bp
-
-app = Flask(__name__)
-app.register_blueprint(sensor_bp)
-
-if __name__ == "__main__":
-    app.run(debug=True)
->>>>>>> 33b79a1b54b483c56b99c809e16f4f6a4316f207

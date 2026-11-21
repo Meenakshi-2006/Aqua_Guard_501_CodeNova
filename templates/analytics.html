@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block title %}Analytics | AquaGuard{% endblock %}
@@ -132,14 +131,8 @@ Water Analytics
 
 <!-- INTRODUCTION -->
 <div class="analytics-intro">
-
     <h2>📊 Water Consumption Analytics</h2>
-
-    <p>
-        Analyse water usage patterns and monitor
-        consumption across different locations.
-    </p>
-
+    <p>Analyse live water usage patterns and monitor consumption across different locations.</p>
 </div>
 
 
@@ -148,17 +141,17 @@ Water Analytics
 
     <div class="analytics-card">
         <h3>Total Water Consumption</h3>
-        <h2>12,450 L</h2>
+        <h2 id="totalConsumptionCard">12,450 L</h2>
     </div>
 
     <div class="analytics-card">
-        <h3>Average Daily Consumption</h3>
-        <h2>2,075 L</h2>
+        <h3>Average Flow / Reading</h3>
+        <h2 id="avgConsumptionCard">2,075 L</h2>
     </div>
 
     <div class="analytics-card">
-        <h3>Highest Consumption</h3>
-        <h2>3,200 L</h2>
+        <h3>Highest Peak Reading</h3>
+        <h2 id="maxConsumptionCard">3,200 L</h2>
     </div>
 
 </div>
@@ -166,25 +159,20 @@ Water Analytics
 
 <!-- TIME FILTER -->
 <div class="analytics-filter">
-
     <select id="periodFilter">
-        <option value="day">Today</option>
-        <option value="week" selected>This Week</option>
+        <option value="day" selected>Today (Live Telemetry)</option>
+        <option value="week">This Week</option>
         <option value="month">This Month</option>
     </select>
-
 </div>
 
 
 <!-- CONSUMPTION TREND -->
 <div class="analytics-panel">
-
     <h3>Water Consumption Trend</h3>
-
     <div class="chart-container">
         <canvas id="consumptionChart"></canvas>
     </div>
-
 </div>
 
 
@@ -192,240 +180,181 @@ Water Analytics
 <div class="chart-grid">
 
     <div class="analytics-panel">
-
         <h3>Location-wise Water Usage</h3>
-
         <div class="chart-container">
             <canvas id="locationChart"></canvas>
         </div>
-
     </div>
-
 
     <!-- USAGE DISTRIBUTION -->
     <div class="analytics-panel">
-
         <h3>Water Usage Distribution</h3>
-
         <div class="chart-container">
             <canvas id="distributionChart"></canvas>
         </div>
-
     </div>
 
 </div>
 
 
-<p class="analytics-note">
-    Note: All analytics currently use sample demonstration
-    data. Actual calculations will be connected to the backend API.
+<p class="analytics-note" id="analyticsStatusNote">
+    Connected to live Virtual Sensor telemetry (/api/sensors).
 </p>
 
 {% endblock %}
 
 
 {% block scripts %}
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 
-    // SAMPLE DATA
-
+    // Default fallback datasets
     const chartData = {
-
         day: {
             labels: ["6 AM", "8 AM", "10 AM", "12 PM", "2 PM", "4 PM"],
             values: [120, 180, 150, 250, 220, 300]
         },
-
         week: {
             labels: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
             values: [1500, 1800, 1650, 2200, 1900, 2500, 2900]
         },
-
         month: {
             labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
             values: [8500, 9200, 10500, 12450]
         }
-
     };
 
+    let locationLabels = ["Hostel A", "Hostel B", "College Block", "Library", "Admin Block"];
+    let locationTotals = [3200, 2500, 2800, 1500, 2450];
 
-    // CONSUMPTION LINE CHART
+    // Fetch live sensor telemetry if available
+    try {
+        const sRes = await fetch("/api/sensors");
+        const sData = await sRes.json();
+        const sensors = sData.sensors || [];
 
-    const consumptionCtx =
-        document.getElementById("consumptionChart");
+        if (sensors.length > 0) {
+            let liveLocations = [];
+            let liveValues = [];
+            let trendLabels = [];
+            let trendValues = [];
+            let allFlows = [];
 
-    const consumptionChart = new Chart(consumptionCtx, {
+            for (const s of sensors) {
+                const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+                const rData = await rRes.json();
+                const readings = rData.readings || [];
 
+                let locSum = 0;
+                readings.forEach((r, idx) => {
+                    const val = Number(r.flow_rate ?? r.flow ?? 0);
+                    locSum += val;
+                    allFlows.push(val);
+                    trendLabels.push(`${s.sensor_id} #${idx + 1}`);
+                    trendValues.push(val);
+                });
+
+                liveLocations.push(s.location_id);
+                liveValues.push(Number(locSum.toFixed(1)));
+            }
+
+            if (allFlows.length > 0) {
+                const totalL = allFlows.reduce((a, b) => a + b, 0);
+                const avgL = totalL / allFlows.length;
+                const maxL = Math.max(...allFlows);
+
+                document.getElementById("totalConsumptionCard").textContent = totalL.toFixed(1) + " L";
+                document.getElementById("avgConsumptionCard").textContent = avgL.toFixed(1) + " L/hr";
+                document.getElementById("maxConsumptionCard").textContent = maxL.toFixed(1) + " L/hr";
+
+                chartData.day.labels = trendLabels.slice(-12);
+                chartData.day.values = trendValues.slice(-12);
+                locationLabels = liveLocations;
+                locationTotals = liveValues;
+            }
+        }
+    } catch (err) {
+        console.error("Analytics fetch error:", err);
+    }
+
+    // 1. CONSUMPTION LINE CHART
+    const consumptionChart = new Chart(document.getElementById("consumptionChart"), {
         type: "line",
-
         data: {
-            labels: chartData.week.labels,
-
+            labels: chartData.day.labels,
             datasets: [{
-                label: "Water Consumption (Litres)",
-
-                data: chartData.week.values,
-
+                label: "Water Consumption (Litres / hr)",
+                data: chartData.day.values,
                 borderColor: "#2196f3",
-
                 backgroundColor: "rgba(33,150,243,0.15)",
-
                 fill: true,
-
                 tension: 0.4,
-
                 borderWidth: 3,
-
                 pointRadius: 5
             }]
         },
-
         options: {
             responsive: true,
             maintainAspectRatio: false,
-
-            plugins: {
-                legend: {
-                    display: true
-                }
-            },
-
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Consumption (Litres)"
-                    }
+                    title: { display: true, text: "Consumption (Litres)" }
                 }
             }
         }
-
     });
 
-
-    // LOCATION-WISE BAR CHART
-
-    new Chart(
-        document.getElementById("locationChart"),
-        {
-            type: "bar",
-
-            data: {
-                labels: [
-                    "Hostel A",
-                    "Hostel B",
-                    "College Block",
-                    "Library",
-                    "Admin Block"
-                ],
-
-                datasets: [{
-                    label: "Water Usage (Litres)",
-
-                    data: [3200, 2500, 2800, 1500, 2450],
-
-                    backgroundColor: [
-                        "#2196f3",
-                        "#16a36a",
-                        "#f59e0b",
-                        "#8b5cf6",
-                        "#ef5350"
-                    ],
-
-                    borderRadius: 6
-                }]
-            },
-
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
+    // 2. LOCATION-WISE BAR CHART
+    new Chart(document.getElementById("locationChart"), {
+        type: "bar",
+        data: {
+            labels: locationLabels,
+            datasets: [{
+                label: "Water Usage (Litres)",
+                data: locationTotals,
+                backgroundColor: ["#2196f3", "#16a36a", "#f59e0b", "#8b5cf6", "#ef5350"],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
         }
-    );
+    });
 
-
-    // WATER USAGE DOUGHNUT CHART
-
-    new Chart(
-        document.getElementById("distributionChart"),
-        {
-            type: "doughnut",
-
-            data: {
-                labels: [
-                    "Hostel A",
-                    "Hostel B",
-                    "College Block",
-                    "Library",
-                    "Admin Block"
-                ],
-
-                datasets: [{
-                    data: [3200, 2500, 2800, 1500, 2450],
-
-                    backgroundColor: [
-                        "#2196f3",
-                        "#16a36a",
-                        "#f59e0b",
-                        "#8b5cf6",
-                        "#ef5350"
-                    ],
-
-                    borderWidth: 2
-                }]
-            },
-
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        position: "bottom"
-                    }
-                }
-            }
+    // 3. WATER USAGE DOUGHNUT CHART
+    new Chart(document.getElementById("distributionChart"), {
+        type: "doughnut",
+        data: {
+            labels: locationLabels,
+            datasets: [{
+                data: locationTotals,
+                backgroundColor: ["#2196f3", "#16a36a", "#f59e0b", "#8b5cf6", "#ef5350"],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom" } }
         }
-    );
-
+    });
 
     // TIME PERIOD FILTER
-
-    document.getElementById("periodFilter")
-        .addEventListener("change", function () {
-
-            const selectedPeriod = this.value;
-
-            consumptionChart.data.labels =
-                chartData[selectedPeriod].labels;
-
-            consumptionChart.data.datasets[0].data =
-                chartData[selectedPeriod].values;
-
-            consumptionChart.update();
-
-        });
+    document.getElementById("periodFilter").addEventListener("change", function () {
+        const selectedPeriod = this.value;
+        consumptionChart.data.labels = chartData[selectedPeriod].labels;
+        consumptionChart.data.datasets[0].data = chartData[selectedPeriod].values;
+        consumptionChart.update();
+    });
 
 });
 
 </script>
-
 {% endblock %}
