@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}Water Readings | AquaGuard{% endblock %}
+
+{% block page_title %}
+Water Consumption Readings
+{% endblock %}
+
+{% block styles %}
+<style>
+
+/* INTRO */
+.readings-intro {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.readings-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.readings-intro p {
+    color: #64748b;
+}
+
+.btn-refresh {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-refresh:hover {
+    background: #1976d2;
+}
+
+/* SUMMARY */
+.reading-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.reading-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+}
+
+.reading-card:nth-child(2) {
+    border-left-color: #16a36a;
+}
+
+.reading-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.reading-card h3 {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.reading-card h2 {
+    font-size: 27px;
+    color: #12345a;
+}
+
+/* MAIN PANEL */
+.readings-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.readings-panel h3 {
+    color: #12345a;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+/* FILTERS */
+.reading-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.reading-filters input,
+.reading-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+}
+
+.reading-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.reading-filters select {
+    flex: 1;
+    min-width: 130px;
+}
+
+/* TABLE */
+.reading-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.reading-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.reading-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.reading-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.reading-table tr:hover {
+    background: #f8fafc;
+}
+
+/* FLOW LABELS */
+.flow-normal {
+    color: #15803d;
+    font-weight: bold;
+}
+
+.flow-high {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+.reading-note {
+    margin-top: 18px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* RESPONSIVE */
+@media(max-width: 700px) {
+    .reading-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .readings-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+<div class="readings-intro">
+    <div>
+        <h2>💧 Water Consumption Readings</h2>
+        <p>View and monitor live water consumption records collected from active virtual sensors.</p>
+    </div>
+    <button class="btn-refresh" onclick="generateAndReload()">▶ Pulse New Readings</button>
+</div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="reading-summary">
+
+    <div class="reading-card">
+        <h3>Total Readings</h3>
+        <h2 id="totalReadings">00</h2>
+    </div>
+
+    <div class="reading-card">
+        <h3>Average Flow Rate</h3>
+        <h2 id="avgFlow">0 L/hr</h2>
+    </div>
+
+    <div class="reading-card">
+        <h3>Highest Flow Rate</h3>
+        <h2 id="maxFlow">0 L/hr</h2>
+    </div>
+
+</div>
+
+
+<!-- READINGS TABLE -->
+<div class="readings-panel">
+
+    <h3>Water Reading History</h3>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="reading-filters">
+
+        <input
+            type="text"
+            id="readingSearch"
+            placeholder="Search Reading ID, Sensor ID or Location..."
+        >
+
+        <select id="sensorFilter">
+            <option value="all">All Sensors</option>
+        </select>
+
+    </div>
+
+
+    <!-- TABLE -->
+    <div class="reading-table-wrapper">
+
+        <table class="reading-table">
+
+            <thead>
+                <tr>
+                    <th>Reading ID</th>
+                    <th>Sensor ID</th>
+                    <th>Location</th>
+                    <th>Flow Rate</th>
+                    <th>Pressure</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+
+            <tbody id="readingTable">
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#64748b;">
+                        Loading sensor readings...
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p class="reading-note">
+        Connected to live Virtual Sensor telemetry (/api/sensors).
+    </p>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadAllSensorReadings();
+
+    document.getElementById("readingSearch").addEventListener("input", filterReadings);
+    document.getElementById("sensorFilter").addEventListener("change", filterReadings);
+});
+
+async function loadAllSensorReadings() {
+    try {
+        const sensorRes = await fetch("/api/sensors");
+        const sensorData = await sensorRes.json();
+        const sensors = sensorData.sensors || [];
+
+        const filterSelect = document.getElementById("sensorFilter");
+        const currentFilter = filterSelect.value;
+        filterSelect.innerHTML = `<option value="all">All Sensors</option>`;
+        sensors.forEach(s => {
+            filterSelect.innerHTML += `<option value="${s.sensor_id}">${s.sensor_id} (${s.location_id})</option>`;
+        });
+        filterSelect.value = currentFilter || "all";
+
+        let allRows = [];
+
+        for (const s of sensors) {
+            const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+            const rData = await rRes.json();
+            if (rData.success && Array.isArray(rData.readings)) {
+                rData.readings.forEach(r => {
+                    allRows.push({
+                        sensor_id: s.sensor_id,
+                        location_id: s.location_id,
+                        flow: Number(r.flow_rate ?? r.flow ?? 0),
+                        pressure: Number(r.pressure ?? 2.2),
+                        timestamp: r.timestamp || new Date().toLocaleString()
+                    });
+                });
+            }
+        }
+
+        const tbody = document.getElementById("readingTable");
+
+        if (allRows.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#64748b;">
+                        No readings yet. Go to Virtual Sensors and click "+ Load 4 Demo Virtual Sensors" first!
+                    </td>
+                </tr>`;
+            document.getElementById("totalReadings").textContent = "00";
+            document.getElementById("avgFlow").textContent = "0 L/hr";
+            document.getElementById("maxFlow").textContent = "0 L/hr";
+            return;
+        }
+
+        // Update summary cards
+        const total = allRows.length;
+        const sumFlow = allRows.reduce((acc, item) => acc + item.flow, 0);
+        const avgFlow = sumFlow / total;
+        const maxFlow = Math.max(...allRows.map(item => item.flow));
+
+        document.getElementById("totalReadings").textContent = String(total).padStart(2, "0");
+        document.getElementById("avgFlow").textContent = avgFlow.toFixed(1) + " L/hr";
+        document.getElementById("maxFlow").textContent = maxFlow.toFixed(1) + " L/hr";
+
+        // Render newest readings first
+        tbody.innerHTML = "";
+        allRows.slice().reverse().forEach((item, index) => {
+            const readingId = "RD" + String(total - index).padStart(3, "0");
+            const flowClass = item.flow > 110 ? "flow-high" : "flow-normal";
+
+            const tr = document.createElement("tr");
+            tr.dataset.sensor = item.sensor_id;
+            tr.innerHTML = `
+                <td><strong>${readingId}</strong></td>
+                <td>${item.sensor_id}</td>
+                <td>${item.location_id}</td>
+                <td class="${flowClass}">${item.flow.toFixed(1)} L/hr</td>
+                <td>${item.pressure.toFixed(1)} bar</td>
+                <td>${item.timestamp}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        filterReadings();
+    } catch (err) {
+        console.error("Error loading readings:", err);
+    }
+}
+
+async function generateAndReload() {
+    const sensorRes = await fetch("/api/sensors");
+    const sensorData = await sensorRes.json();
+    const sensors = sensorData.sensors || [];
+
+    for (const s of sensors) {
+        await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`, { method: "POST" });
+    }
+    loadAllSensorReadings();
+}
+
+function filterReadings() {
+    const search = document.getElementById("readingSearch").value.toLowerCase();
+    const selectedSensor = document.getElementById("sensorFilter").value;
+    const rows = document.querySelectorAll("#readingTable tr");
+
+    rows.forEach(function (row) {
+        if (!row.dataset.sensor) return;
+        const text = row.textContent.toLowerCase();
+        const sensor = row.dataset.sensor;
+
+        const searchMatch = text.includes(search);
+        const sensorMatch = selectedSensor === "all" || sensor === selectedSensor;
+
+        row.style.display = searchMatch && sensorMatch ? "" : "none";
+    });
+}
+
+</script>
+{% endblock %}

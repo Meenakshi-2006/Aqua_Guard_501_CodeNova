@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+
+{% block title %}Locations | AquaGuard{% endblock %}
+
+{% block page_title %}
+Location Monitoring
+{% endblock %}
+
+{% block styles %}
+<style>
+
+.location-intro {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.location-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.location-intro p {
+    color: #64748b;
+}
+
+.btn-sync {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-sync:hover {
+    background: #1976d2;
+}
+
+.location-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.location-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+}
+
+.location-card:nth-child(2) {
+    border-left-color: #16a36a;
+}
+
+.location-card:nth-child(3) {
+    border-left-color: #ef4444;
+}
+
+.location-card:nth-child(4) {
+    border-left-color: #f59e0b;
+}
+
+.location-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.location-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.location-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.location-panel h3 {
+    color: #12345a;
+    margin-bottom: 20px;
+}
+
+.location-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.location-filters input,
+.location-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.location-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.location-filters select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.location-table-wrapper {
+    overflow-x: auto;
+}
+
+.location-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.location-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.location-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+}
+
+.location-table tr:hover {
+    background: #f8fafc;
+}
+
+.location-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.normal {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.leakage {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.location-note {
+    background: #eff6ff;
+    padding: 20px;
+    border-left: 5px solid #2196f3;
+    border-radius: 8px;
+}
+
+.location-note h3 {
+    color: #12345a;
+    margin-bottom: 10px;
+}
+
+.location-note p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+@media(max-width: 950px) {
+    .location-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .location-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .location-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+<div class="location-intro">
+    <div>
+        <h2>📍 Monitored Locations</h2>
+        <p>Monitor water consumption and sensor activity across different buildings and locations.</p>
+    </div>
+    <button class="btn-sync" onclick="loadLocationsFromBackend()">↻ Sync Location Status</button>
+</div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="location-summary">
+
+    <div class="location-card">
+        <h3>Total Locations</h3>
+        <h2 id="totalLocations">00</h2>
+    </div>
+
+    <div class="location-card">
+        <h3>Normal Locations</h3>
+        <h2 id="normalLocations">00</h2>
+    </div>
+
+    <div class="location-card">
+        <h3>Leakage Detected</h3>
+        <h2 id="leakageLocations">00</h2>
+    </div>
+
+    <div class="location-card">
+        <h3>Warning Locations</h3>
+        <h2 id="warningLocations">00</h2>
+    </div>
+
+</div>
+
+
+<!-- LOCATION TABLE -->
+<div class="location-panel">
+
+    <h3>Location Details</h3>
+
+    <div class="location-filters">
+
+        <input
+            type="text"
+            id="locationSearch"
+            placeholder="Search location..."
+        >
+
+        <select id="locationFilter">
+            <option value="all">All Locations</option>
+            <option value="normal">Normal</option>
+            <option value="leakage">Leakage</option>
+            <option value="warning">Warning</option>
+        </select>
+
+    </div>
+
+
+    <div class="location-table-wrapper">
+
+        <table class="location-table">
+
+            <thead>
+                <tr>
+                    <th>Location ID</th>
+                    <th>Location Name</th>
+                    <th>Active Sensors</th>
+                    <th>Water Consumption</th>
+                    <th>Flow Rate</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="locationTable">
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#64748b;">
+                        Loading monitored locations...
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p style="margin-top:15px;color:#64748b;font-size:13px;">
+        Connected to live Virtual Sensor location zones (/api/sensors).
+    </p>
+
+</div>
+
+
+<!-- LOCATION RECOMMENDATIONS -->
+<div class="location-panel">
+
+    <div class="location-note">
+        <h3>💡 Location Monitoring Recommendations</h3>
+        <p id="locationRecommendations">
+            All monitored zones are synced with your active virtual sensors. High-flow or leak-mode zones are automatically flagged above.
+        </p>
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadLocationsFromBackend();
+
+    document.getElementById("locationSearch").addEventListener("input", filterLocations);
+    document.getElementById("locationFilter").addEventListener("change", filterLocations);
+});
+
+async function loadLocationsFromBackend() {
+    try {
+        const sRes = await fetch("/api/sensors");
+        const sData = await sRes.json();
+        const sensors = sData.sensors || [];
+
+        const tbody = document.getElementById("locationTable");
+
+        if (sensors.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#64748b;">
+                        No active locations yet. Load demo sensors in Virtual Sensors first!
+                    </td>
+                </tr>`;
+            updateLocationCards([]);
+            return;
+        }
+
+        let locationsList = [];
+
+        for (let i = 0; i < sensors.length; i++) {
+            const s = sensors[i];
+            const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+            const rData = await rRes.json();
+            const readings = rData.readings || [];
+
+            let totalConsumed = 0;
+            readings.forEach(r => {
+                totalConsumed += Number(r.flow_rate ?? r.flow ?? 0);
+            });
+
+            const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+            const currentFlow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
+
+            let statusKey = "normal";
+            if (s.scenario === "burst" || currentFlow > 150) statusKey = "leakage";
+            else if (s.scenario === "leak" || currentFlow > 100) statusKey = "warning";
+
+            locationsList.push({
+                locId: "LOC" + String(i + 1).padStart(3, "0"),
+                name: s.location_id,
+                sensorId: s.sensor_id,
+                activeCount: readings.length > 0 ? 1 : 0,
+                consumption: totalConsumed,
+                flow: currentFlow,
+                status: statusKey
+            });
+        }
+
+        tbody.innerHTML = "";
+        locationsList.forEach(loc => {
+            const label = loc.status === "leakage" ? "Leakage" : (loc.status === "warning" ? "Warning" : "Normal");
+
+            const tr = document.createElement("tr");
+            tr.dataset.status = loc.status;
+            tr.innerHTML = `
+                <td><strong>${loc.locId}</strong></td>
+                <td>${loc.name} (${loc.sensorId})</td>
+                <td>${loc.activeCount}</td>
+                <td>${loc.consumption.toFixed(1)} L</td>
+                <td>${loc.flow.toFixed(1)} L/hr</td>
+                <td><span class="location-status ${loc.status}">${label}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateLocationCards(locationsList);
+        filterLocations();
+    } catch (err) {
+        console.error("Error loading locations:", err);
+    }
+}
+
+function updateLocationCards(list) {
+    const total = list.length;
+    const normal = list.filter(l => l.status === "normal").length;
+    const leakage = list.filter(l => l.status === "leakage").length;
+    const warning = list.filter(l => l.status === "warning").length;
+
+    document.getElementById("totalLocations").textContent = String(total).padStart(2, "0");
+    document.getElementById("normalLocations").textContent = String(normal).padStart(2, "0");
+    document.getElementById("leakageLocations").textContent = String(leakage).padStart(2, "0");
+    document.getElementById("warningLocations").textContent = String(warning).padStart(2, "0");
+}
+
+function filterLocations() {
+    const searchValue = document.getElementById("locationSearch").value.toLowerCase();
+    const selectedStatus = document.getElementById("locationFilter").value;
+    const rows = document.querySelectorAll("#locationTable tr");
+
+    rows.forEach(function(row) {
+        if (!row.dataset.status) return;
+        const text = row.textContent.toLowerCase();
+        const status = row.dataset.status;
+
+        const matchesSearch = text.includes(searchValue);
+        const matchesStatus = selectedStatus === "all" || status === selectedStatus;
+
+        row.style.display = matchesSearch && matchesStatus ? "" : "none";
+    });
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,591 @@
+{% extends "base.html" %}
+
+{% block title %}Virtual Sensors | AquaGuard{% endblock %}
+
+{% block page_title %}
+Virtual Sensor Monitoring
+{% endblock %}
+
+{% block styles %}
+<style>
+
+/* PAGE HEADER */
+.sensor-intro {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.sensor-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.sensor-intro p {
+    color: #64748b;
+}
+
+/* ACTION BUTTONS */
+.btn-primary {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: #1976d2;
+}
+
+.btn-small {
+    background: #edf5fb;
+    color: #12345a;
+    border: 1px solid #cbd5e1;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-small:hover {
+    background: #dbeafe;
+}
+
+/* ADD SENSOR BAR */
+.add-sensor-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+    margin-bottom: 25px;
+}
+
+.add-sensor-panel h3 {
+    color: #12345a;
+    font-size: 17px;
+    margin-bottom: 14px;
+}
+
+.add-sensor-form {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.add-sensor-form input {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 160px;
+}
+
+/* SUMMARY CARDS */
+.sensor-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.sensor-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.sensor-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.sensor-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.sensor-card:nth-child(2) {
+    border-left-color: #22a06b;
+}
+
+.sensor-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.sensor-card:nth-child(4) {
+    border-left-color: #ef5350;
+}
+
+/* SENSOR TABLE PANEL */
+.sensor-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.sensor-panel h3 {
+    color: #12345a;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+/* SEARCH AND FILTER */
+.sensor-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.sensor-controls input,
+.sensor-controls select {
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.sensor-controls input {
+    width: 65%;
+}
+
+.sensor-controls select {
+    width: 35%;
+    background: white;
+}
+
+/* TABLE */
+.sensor-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.sensor-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+    text-align: left;
+}
+
+.sensor-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.sensor-table td {
+    padding: 16px 15px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 14px;
+}
+
+.sensor-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.scenario-select {
+    padding: 6px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
+}
+
+/* STATUS LABELS */
+.status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.online {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.offline {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.warning {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+/* HEALTH INDICATOR */
+.health-good {
+    color: #16a34a;
+    font-weight: bold;
+}
+
+.health-medium {
+    color: #d97706;
+    font-weight: bold;
+}
+
+.health-poor {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* NOTE */
+.demo-note {
+    margin-top: 18px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+    .sensor-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .sensor-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .sensor-controls {
+        flex-direction: column;
+    }
+
+    .sensor-controls input,
+    .sensor-controls select {
+        width: 100%;
+    }
+
+    .sensor-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+<div class="sensor-intro">
+    <div>
+        <h2>💧 Virtual Sensor Monitoring</h2>
+        <p>Monitor water flow, pressure and virtual sensor health across different locations.</p>
+    </div>
+    <button class="btn-primary" onclick="seedDemoSensors()">+ Load 4 Demo Virtual Sensors</button>
+</div>
+
+<!-- ADD NEW VIRTUAL SENSOR -->
+<div class="add-sensor-panel">
+    <h3>Add Virtual Sensor Node</h3>
+    <div class="add-sensor-form">
+        <input type="text" id="newSensorId" placeholder="Sensor ID (e.g., VS-01)">
+        <input type="text" id="newLocationId" placeholder="Location (e.g., Hostel Block A)">
+        <input type="number" id="newNormalFlow" placeholder="Normal Flow L/h (e.g., 45)" value="45">
+        <button class="btn-primary" onclick="addNewSensor()">Add Sensor</button>
+    </div>
+</div>
+
+<!-- SENSOR SUMMARY -->
+<div class="sensor-summary">
+
+    <div class="sensor-card">
+        <h3>Total Sensors</h3>
+        <h2 id="totalSensors">00</h2>
+    </div>
+
+    <div class="sensor-card">
+        <h3>Online Sensors</h3>
+        <h2 id="onlineSensors">00</h2>
+    </div>
+
+    <div class="sensor-card">
+        <h3>Warning Sensors</h3>
+        <h2 id="warningSensors">00</h2>
+    </div>
+
+    <div class="sensor-card">
+        <h3>Offline Sensors</h3>
+        <h2 id="offlineSensors">00</h2>
+    </div>
+
+</div>
+
+
+<!-- SENSOR TABLE -->
+<div class="sensor-panel">
+
+    <h3>Live Virtual Sensor Nodes</h3>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="sensor-controls">
+
+        <input
+            type="text"
+            id="sensorSearch"
+            placeholder="Search sensor ID or location..."
+        >
+
+        <select id="statusFilter">
+            <option value="all">All Sensors</option>
+            <option value="online">Online</option>
+            <option value="warning">Warning</option>
+            <option value="offline">Offline</option>
+        </select>
+
+    </div>
+
+
+    <!-- TABLE -->
+    <div class="sensor-table-wrapper">
+
+        <table class="sensor-table">
+
+            <thead>
+                <tr>
+                    <th>Sensor ID</th>
+                    <th>Location</th>
+                    <th>Flow Rate</th>
+                    <th>Pressure</th>
+                    <th>Scenario Mode</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="sensorTable">
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#64748b;">
+                        No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p class="demo-note" id="sensorStatusMsg">
+        Connected to Backend Virtual Sensor Engine (/api/sensors).
+    </p>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+
+let latestReadingsMap = {};
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadSensorsFromBackend();
+
+    document.getElementById("sensorSearch").addEventListener("input", filterSensors);
+    document.getElementById("statusFilter").addEventListener("change", filterSensors);
+});
+
+// 1. Fetch all sensors from GET /api/sensors
+async function loadSensorsFromBackend() {
+    try {
+        const res = await fetch("/api/sensors");
+        const data = await res.json();
+
+        if (!data.success) return;
+
+        const sensors = data.sensors || [];
+        const tbody = document.getElementById("sensorTable");
+
+        if (sensors.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#64748b;">
+                        No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!
+                    </td>
+                </tr>`;
+            updateSummaryCards([]);
+            return;
+        }
+
+        // Fetch latest reading for each sensor
+        for (const s of sensors) {
+            try {
+                const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+                const rData = await rRes.json();
+                if (rData.success && rData.readings && rData.readings.length > 0) {
+                    latestReadingsMap[s.sensor_id] = rData.readings[rData.readings.length - 1];
+                }
+            } catch (e) {}
+        }
+
+        tbody.innerHTML = "";
+        sensors.forEach(s => {
+            const reading = latestReadingsMap[s.sensor_id];
+            const flowVal = reading ? (reading.flow_rate ?? reading.flow ?? 0) : 0;
+            const pressureVal = reading ? (reading.pressure ?? 2.2) : 0;
+            const isWarning = s.scenario && s.scenario !== "normal";
+            const statusKey = !reading ? "offline" : (isWarning ? "warning" : "online");
+            const statusLabel = !reading ? "Ready" : (isWarning ? "Leak Alert" : "Online");
+
+            const tr = document.createElement("tr");
+            tr.dataset.status = statusKey;
+            tr.innerHTML = `
+                <td><strong>${s.sensor_id}</strong></td>
+                <td>${s.location_id}</td>
+                <td>${Number(flowVal).toFixed(1)} L/hour</td>
+                <td>${Number(pressureVal).toFixed(1)} bar</td>
+                <td>
+                    <select class="scenario-select" onchange="changeScenario('${s.sensor_id}', this.value)">
+                        <option value="normal" ${s.scenario === "normal" ? "selected" : ""}>Normal Flow</option>
+                        <option value="leak" ${s.scenario === "leak" ? "selected" : ""}>Continuous Leak</option>
+                        <option value="burst" ${s.scenario === "burst" ? "selected" : ""}>Pipe Burst</option>
+                    </select>
+                </td>
+                <td><span class="status ${statusKey}">${statusLabel}</span></td>
+                <td>
+                    <button class="btn-small" onclick="generateOneReading('${s.sensor_id}')">▶ Pulse Reading</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateSummaryCards(sensors);
+        filterSensors();
+    } catch (err) {
+        console.error("Failed to load sensors:", err);
+    }
+}
+
+// 2. Add a single virtual sensor via POST /api/sensors
+async function addNewSensor() {
+    const sensorId = document.getElementById("newSensorId").value.trim();
+    const locationId = document.getElementById("newLocationId").value.trim();
+    const normalFlow = parseFloat(document.getElementById("newNormalFlow").value) || 40;
+
+    if (!sensorId || !locationId) {
+        alert("Please enter both Sensor ID and Location.");
+        return;
+    }
+
+    const res = await fetch("/api/sensors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            sensor_id: sensorId,
+            location_id: locationId,
+            normal_flow: normalFlow
+        })
+    });
+    const data = await res.json();
+    if (data.success) {
+        await generateOneReading(sensorId);
+        document.getElementById("newSensorId").value = "";
+        document.getElementById("newLocationId").value = "";
+    } else {
+        alert(data.error || "Could not add sensor");
+    }
+}
+
+// 3. One-click load 4 demo virtual sensors for presentation
+async function seedDemoSensors() {
+    const demos = [
+        { sensor_id: "VS-01", location_id: "Main Gate Inlet", normal_flow: 180 },
+        { sensor_id: "VS-02", location_id: "Hostel Block A", normal_flow: 65 },
+        { sensor_id: "VS-03", location_id: "Hostel Block B Tank", normal_flow: 85 },
+        { sensor_id: "VS-04", location_id: "Mess & Kitchen", normal_flow: 50 }
+    ];
+
+    for (const d of demos) {
+        await fetch("/api/sensors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(d)
+        });
+        await fetch(`/api/sensors/${encodeURIComponent(d.sensor_id)}/readings`, { method: "POST" });
+    }
+    loadSensorsFromBackend();
+}
+
+// 4. Generate a new reading via POST /api/sensors/<id>/readings
+async function generateOneReading(sensorId) {
+    const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/readings`, {
+        method: "POST"
+    });
+    const data = await res.json();
+    if (data.success && data.reading) {
+        latestReadingsMap[sensorId] = data.reading;
+        loadSensorsFromBackend();
+    }
+}
+
+// 5. Switch sensor scenario via POST /api/sensors/<id>/scenario
+async function changeScenario(sensorId, scenario) {
+    await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/scenario`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenario: scenario })
+    });
+    await generateOneReading(sensorId);
+}
+
+// 6. Update top 4 summary cards
+function updateSummaryCards(sensors) {
+    let online = 0, warning = 0, offline = 0;
+    sensors.forEach(s => {
+        const hasReading = !!latestReadingsMap[s.sensor_id];
+        if (!hasReading) offline++;
+        else if (s.scenario && s.scenario !== "normal") warning++;
+        else online++;
+    });
+
+    document.getElementById("totalSensors").textContent = String(sensors.length).padStart(2, "0");
+    document.getElementById("onlineSensors").textContent = String(online).padStart(2, "0");
+    document.getElementById("warningSensors").textContent = String(warning).padStart(2, "0");
+    document.getElementById("offlineSensors").textContent = String(offline).padStart(2, "0");
+}
+
+// 7. Search and status filter
+function filterSensors() {
+    const searchText = document.getElementById("sensorSearch").value.toLowerCase();
+    const selectedStatus = document.getElementById("statusFilter").value;
+    const rows = document.querySelectorAll("#sensorTable tr");
+
+    rows.forEach(function (row) {
+        if (!row.dataset.status) return;
+        const rowText = row.textContent.toLowerCase();
+        const rowStatus = row.dataset.status;
+
+        const matchesSearch = rowText.includes(searchText);
+        const matchesStatus = selectedStatus === "all" || rowStatus === selectedStatus;
+
+        row.style.display = matchesSearch && matchesStatus ? "" : "none";
+    });
+}
+
+</script>
+{% endblock %}

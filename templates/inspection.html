@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block title %}Inspection | AquaGuard{% endblock %}
+
+{% block page_title %}
+Inspection Management
+{% endblock %}
+
+{% block styles %}
+<style>
+.inspection-intro {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.inspection-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.inspection-intro p {
+    color: #64748b;
+}
+
+.btn-recalculate {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-recalculate:hover {
+    background: #1976d2;
+}
+
+.inspection-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 25px;
+}
+
+.inspection-card {
+    background: white;
+    padding: 22px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+    border-radius: 12px;
+}
+
+.inspection-card:nth-child(2) {
+    border-left-color: #ef4444;
+}
+
+.inspection-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.inspection-card:nth-child(4) {
+    border-left-color: #16a36a;
+}
+
+.inspection-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.inspection-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.inspection-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+}
+
+.inspection-panel h3 {
+    color: #12345a;
+    margin-bottom: 20px;
+}
+
+.inspection-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.inspection-filters input,
+.inspection-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.inspection-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.inspection-filters select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.inspection-table-wrapper {
+    overflow-x: auto;
+}
+
+.inspection-table {
+    width: 100%;
+    min-width: 750px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.inspection-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+}
+
+.inspection-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+}
+
+.priority {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.priority-high {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.priority-medium {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.priority-low {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.action-btn {
+    background: #123f70;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 13px;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #1e5a91;
+}
+
+.action-btn:disabled {
+    background: #16a36a;
+    cursor: default;
+}
+
+.inspection-note {
+    background: #eff6ff;
+    border-left: 5px solid #2196f3;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.inspection-note h3 {
+    color: #12345a;
+    margin-bottom: 10px;
+}
+
+.inspection-note p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+@media(max-width: 950px) {
+    .inspection-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .inspection-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .inspection-panel {
+        padding: 15px;
+    }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="inspection-intro">
+    <div>
+        <h2>🔍 Smart Inspection Management</h2>
+        <p>Automatically rank high-risk locations by estimated water loss and prioritize maintenance.</p>
+    </div>
+    <button class="btn-recalculate" onclick="loadInspectionRankings()">↻ Refresh Priority Ranking</button>
+</div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="inspection-summary">
+
+    <div class="inspection-card">
+        <h3>Total Inspections</h3>
+        <h2 id="totalInspections">00</h2>
+    </div>
+
+    <div class="inspection-card">
+        <h3>High Priority</h3>
+        <h2 id="highPriority">00</h2>
+    </div>
+
+    <div class="inspection-card">
+        <h3>Medium Priority</h3>
+        <h2 id="mediumPriority">00</h2>
+    </div>
+
+    <div class="inspection-card">
+        <h3>Completed</h3>
+        <h2 id="completedCount">00</h2>
+    </div>
+
+</div>
+
+
+<!-- INSPECTION TABLE -->
+<div class="inspection-panel">
+
+    <h3>Inspection Priority Ranking</h3>
+
+    <div class="inspection-filters">
+
+        <input
+            type="text"
+            id="inspectionSearch"
+            placeholder="Search location or inspection ID..."
+        >
+
+        <select id="priorityFilter">
+            <option value="all">All Priorities</option>
+            <option value="high">High Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="low">Low Priority</option>
+        </select>
+
+    </div>
+
+
+    <div class="inspection-table-wrapper">
+
+        <table class="inspection-table">
+
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Inspection ID</th>
+                    <th>Location</th>
+                    <th>Estimated Water Loss</th>
+                    <th>Priority</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="inspectionTable">
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#64748b;">
+                        Calculating priority rankings from virtual sensors...
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <p style="margin-top:15px;color:#64748b;font-size:13px;">
+        Ranked live using virtual sensor flow anomalies (/api/sensors).
+    </p>
+
+</div>
+
+
+<!-- RECOMMENDATIONS -->
+<div class="inspection-panel">
+
+    <div class="inspection-note">
+
+        <h3>💡 Inspection Recommendations</h3>
+
+        <p>
+            <strong>High Priority:</strong>
+            Inspect immediately and check for major pipeline leakage.
+        </p>
+
+        <p>
+            <strong>Medium Priority:</strong>
+            Schedule inspection and monitor unusual flow patterns.
+        </p>
+
+        <p>
+            <strong>Low Priority:</strong>
+            Continue regular monitoring and preventive maintenance.
+        </p>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+
+let completedInspections = {};
+
+document.addEventListener("DOMContentLoaded", function () {
+    loadInspectionRankings();
+
+    document.getElementById("inspectionSearch").addEventListener("input", filterInspections);
+    document.getElementById("priorityFilter").addEventListener("change", filterInspections);
+});
+
+async function loadInspectionRankings() {
+    try {
+        const sRes = await fetch("/api/sensors");
+        const sData = await sRes.json();
+        const sensors = sData.sensors || [];
+
+        if (sensors.length === 0) {
+            document.getElementById("inspectionTable").innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; color:#64748b;">
+                        No active sensors yet. Load demo sensors in Virtual Sensors first!
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        let items = [];
+
+        for (const s of sensors) {
+            const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+            const rData = await rRes.json();
+            const readings = rData.readings || [];
+            const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+            const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
+
+            let estLoss = 0;
+            let priority = "low";
+
+            if (s.scenario === "burst" || flow > 150) {
+                estLoss = Math.round(flow * 6);
+                priority = "high";
+            } else if (s.scenario === "leak" || flow > 100) {
+                estLoss = Math.round(flow * 4);
+                priority = "medium";
+            } else {
+                estLoss = Math.round(flow * 0.5);
+                priority = "low";
+            }
+
+            items.push({
+                sensor_id: s.sensor_id,
+                location: s.location_id,
+                estLoss: estLoss,
+                priority: priority
+            });
+        }
+
+        // Sort highest estimated water loss first
+        items.sort((a, b) => b.estLoss - a.estLoss);
+
+        const tbody = document.getElementById("inspectionTable");
+        tbody.innerHTML = "";
+
+        items.forEach((item, index) => {
+            const inspId = "IN" + String(index + 1).padStart(3, "0");
+            const isDone = !!completedInspections[item.sensor_id];
+            const prioLabel = item.priority === "high" ? "High" : (item.priority === "medium" ? "Medium" : "Low");
+
+            const tr = document.createElement("tr");
+            tr.dataset.priority = item.priority;
+            if (isDone) tr.style.background = "#f0fdf4";
+
+            tr.innerHTML = `
+                <td><strong>${index + 1}</strong></td>
+                <td>${inspId}</td>
+                <td>${item.location} (${item.sensor_id})</td>
+                <td><strong>${item.estLoss} L/day</strong></td>
+                <td><span class="priority priority-${item.priority}">${prioLabel}</span></td>
+                <td>
+                    <button class="action-btn" ${isDone ? "disabled" : ""}
+                        onclick="completeInspection(this, '${item.sensor_id}')">
+                        ${isDone ? "Completed" : "Inspect"}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateInspectionSummary(items);
+        filterInspections();
+    } catch (err) {
+        console.error("Error loading inspections:", err);
+    }
+}
+
+function updateInspectionSummary(items) {
+    const total = items.length;
+    const high = items.filter(i => i.priority === "high").length;
+    const medium = items.filter(i => i.priority === "medium").length;
+    const completed = items.filter(i => !!completedInspections[i.sensor_id]).length;
+
+    document.getElementById("totalInspections").textContent = String(total).padStart(2, "0");
+    document.getElementById("highPriority").textContent = String(high).padStart(2, "0");
+    document.getElementById("mediumPriority").textContent = String(medium).padStart(2, "0");
+    document.getElementById("completedCount").textContent = String(completed).padStart(2, "0");
+}
+
+function completeInspection(button, sensorId) {
+    completedInspections[sensorId] = true;
+    const row = button.closest("tr");
+    button.textContent = "Completed";
+    button.disabled = true;
+    row.style.background = "#f0fdf4";
+
+    const completedEl = document.getElementById("completedCount");
+    completedEl.textContent = String(Number(completedEl.textContent) + 1).padStart(2, "0");
+}
+
+function filterInspections() {
+    const searchValue = document.getElementById("inspectionSearch").value.toLowerCase();
+    const priorityValue = document.getElementById("priorityFilter").value;
+    const rows = document.querySelectorAll("#inspectionTable tr");
+
+    rows.forEach(function(row) {
+        if (!row.dataset.priority) return;
+        const text = row.textContent.toLowerCase();
+        const priority = row.dataset.priority;
+
+        const matchesSearch = text.includes(searchValue);
+        const matchesPriority = priorityValue === "all" || priority === priorityValue;
+
+        row.style.display = matchesSearch && matchesPriority ? "" : "none";
+    });
+}
+
+</script>
+{% endblock %}

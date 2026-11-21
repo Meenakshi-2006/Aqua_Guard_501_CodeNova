@@ -1,0 +1,148 @@
+
+/* ==============================
+   AQUAGUARD DASHBOARD
+============================== */
+
+/* Welcome Section */
+.welcome {
+    margin-bottom: 25px;
+}
+
+.welcome h2 {
+    font-size: 28px;
+    color: #12345a;
+    margin-bottom: 8px;
+}
+
+.welcome p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+/* Dashboard Cards */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: #ffffff;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #20b8d5;
+    box-shadow: 0 3px 12px rgba(15, 39, 71, 0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 7px 18px rgba(15, 39, 71, 0.12);
+}
+
+.card h3 {
+    font-size: 15px;
+    color: #64748b;
+    margin-bottom: 15px;
+}
+
+.card h2 {
+    font-size: 27px;
+    color: #12345a;
+}
+
+/* Different Card Highlights */
+.card:nth-child(1) {
+    border-left-color: #2196f3;
+}
+
+.card:nth-child(2) {
+    border-left-color: #ef5350;
+}
+
+.card:nth-child(3) {
+    border-left-color: #22a06b;
+}
+
+.card:nth-child(4) {
+    border-left-color: #f59e0b;
+}
+
+/* Dashboard Panels */
+.panel {
+    background: #ffffff;
+    padding: 24px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15, 39, 71, 0.05);
+}
+
+.panel h3 {
+    color: #12345a;
+    font-size: 19px;
+    margin-bottom: 22px;
+}
+
+/* Chart */
+#waterChart {
+    width: 100% !important;
+    height: 300px !important;
+}
+
+/* Alerts Table */
+.panel table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.panel th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.panel td {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+}
+
+.panel tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Responsive Dashboard */
+@media (max-width: 1100px) {
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .welcome h2 {
+        font-size: 22px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .panel {
+        padding: 15px;
+        overflow-x: auto;
+    }
+
+    .panel table {
+        min-width: 500px;
+    }
+}

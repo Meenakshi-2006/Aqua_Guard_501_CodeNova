@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}AquaGuard{% endblock %}</title>
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Dashboard Stylesheet -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+    <!-- Components Stylesheet -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/components.css') }}">
+
+    <!-- Responsive Stylesheet -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/responsive.css') }}">
+
+    {% block styles %}{% endblock %}
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <h2>💧 AquaGuard</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('dashboard') }}">
+                <span>▦</span> Dashboard
+            </a>
+
+            <a href="/sensors">
+                <span>◉</span> Virtual Sensors
+            </a>
+
+            <a href="/readings">
+                <span>▤</span> Readings
+            </a>
+
+            <a href="/analytics">
+                <span>▥</span> Analytics
+            </a>
+
+            <a href="/alerts">
+                <span>⚠</span> Leak Alerts
+            </a>
+
+            <a href="/inspection">
+                <span>⌕</span> Inspection
+            </a>
+
+            <a href="/locations">
+                <span>⌖</span> Locations
+            </a>
+
+            <a href="/settings">
+                <span>⚙</span> Settings
+            </a>
+
+        </nav>
+
+        <!-- Sidebar Footer -->
+
+        <div class="sidebar-footer">
+            <p>Smart Water Monitoring</p>
+            <small>AquaGuard © 2026</small>
+        </div>
+
+    </aside>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <div class="main-content">
+
+        <!-- TOP HEADER -->
+
+        <header class="topbar">
+
+            <div class="header-title">
+
+                <h2>
+                    {% block page_title %}
+                    Dashboard
+                    {% endblock %}
+                </h2>
+
+                <p>AquaGuard Monitoring System</p>
+
+            </div>
+
+            <div class="header-right">
+
+                <span class="status-indicator"></span>
+
+                <span>System Online</span>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE CONTENT -->
+
+        <main class="content">
+
+            {% block content %}
+            {% endblock %}
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+{% block scripts %}
+{% endblock %}
+
+
+</body>
+</html>

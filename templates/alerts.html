@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+
+{% block title %}Leak Alerts | AquaGuard{% endblock %}
+
+{% block page_title %}
+Leak Detection Alerts
+{% endblock %}
+
+{% block styles %}
+<style>
+
+.alert-intro {
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.alert-intro h2 {
+    color: #12345a;
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.alert-intro p {
+    color: #64748b;
+}
+
+.btn-scan {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-scan:hover {
+    background: #dc2626;
+}
+
+.btn-action {
+    background: #edf5fb;
+    color: #12345a;
+    border: 1px solid #cbd5e1;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+.btn-action:hover {
+    background: #dbeafe;
+}
+
+.btn-email {
+    background: #0f766e;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-email:hover {
+    background: #115e59;
+}
+
+/* EMAIL DISPATCH TOAST BANNER */
+.email-toast {
+    display: none;
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+    border-left: 5px solid #16a34a;
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.alert-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.alert-card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2196f3;
+}
+
+.alert-card:nth-child(2) {
+    border-left-color: #ef4444;
+}
+
+.alert-card:nth-child(3) {
+    border-left-color: #f59e0b;
+}
+
+.alert-card:nth-child(4) {
+    border-left-color: #16a36a;
+}
+
+.alert-card h3 {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.alert-card h2 {
+    color: #12345a;
+    font-size: 27px;
+}
+
+.alert-panel {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+    margin-bottom: 25px;
+}
+
+.alert-panel h3 {
+    color: #12345a;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.alert-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.alert-filters input,
+.alert-filters select {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+}
+
+.alert-filters input {
+    flex: 2;
+    min-width: 180px;
+}
+
+.alert-filters select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.alert-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.alert-table {
+    width: 100%;
+    min-width: 860px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.alert-table th {
+    background: #edf5fb;
+    color: #12345a;
+    padding: 15px;
+    font-size: 14px;
+}
+
+.alert-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.alert-table tr:hover {
+    background: #f8fafc;
+}
+
+.severity {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.high {
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+.medium {
+    color: #b45309;
+    background: #fef3c7;
+}
+
+.low {
+    color: #15803d;
+    background: #dcfce7;
+}
+
+.alert-status {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.resolved {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.recommendation {
+    background: #eff6ff;
+    border-left: 5px solid #2196f3;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.recommendation h3 {
+    color: #12345a;
+    margin-bottom: 10px;
+}
+
+.recommendation p {
+    color: #475569;
+    line-height: 1.6;
+}
+
+.alert-note {
+    color: #64748b;
+    font-size: 13px;
+    margin-top: 15px;
+}
+
+@media(max-width: 950px) {
+    .alert-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media(max-width: 600px) {
+    .alert-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .alert-panel {
+        padding: 15px;
+    }
+}
+
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- INTRODUCTION -->
+<div class="alert-intro">
+    <div>
+        <h2>🚨 Leakage Detection Center</h2>
+        <p>Monitor suspected water leakage, identify severity and dispatch instant email alerts to maintenance.</p>
+    </div>
+    <button class="btn-scan" onclick="scanLiveSensorsForLeaks()">🔍 Scan Sensors for Leaks</button>
+</div>
+
+<!-- EMAIL DISPATCH NOTIFICATION BANNER -->
+<div id="emailToast" class="email-toast"></div>
+
+
+<!-- SUMMARY CARDS -->
+<div class="alert-summary">
+
+    <div class="alert-card">
+        <h3>Total Alerts</h3>
+        <h2 id="totalAlerts">00</h2>
+    </div>
+
+    <div class="alert-card">
+        <h3>High Severity</h3>
+        <h2 id="highAlerts">00</h2>
+    </div>
+
+    <div class="alert-card">
+        <h3>Medium Severity</h3>
+        <h2 id="mediumAlerts">00</h2>
+    </div>
+
+    <div class="alert-card">
+        <h3>Resolved Alerts</h3>
+        <h2 id="resolvedAlerts">00</h2>
+    </div>
+
+</div>
+
+
+<!-- ALERT TABLE -->
+<div class="alert-panel">
+
+    <h3>Leakage Alert History</h3>
+
+    <!-- SEARCH AND FILTER -->
+    <div class="alert-filters">
+
+        <input
+            type="text"
+            id="alertSearch"
+            placeholder="Search alert ID or location..."
+        >
+
+        <select id="severityFilter">
+            <option value="all">All Severities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
+
+        <select id="alertStatusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+        </select>
+
+    </div>
+
+
+    <!-- ALERT TABLE -->
+    <div class="alert-table-wrapper">
+
+        <table class="alert-table">
+
+            <thead>
+                <tr>
+                    <th>Alert ID</th>
+                    <th>Location</th>
+                    <th>Flow Rate</th>
+                    <th>Severity</th>
+                    <th>Detection Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="alertTable">
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#64748b;">
+                        Scanning virtual sensors for leak anomalies...
+                    </td>
+                </tr>
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- RECOMMENDED ACTION -->
+    <div class="recommendation">
+        <h3>💡 Recommended Action</h3>
+        <p id="recommendedActionText">
+            High severity alerts should be inspected immediately. Click <strong>📧 Email Alert</strong> to notify the campus maintenance team with live telemetry details.
+        </p>
+    </div>
+
+    <p class="alert-note">
+        Connected to live Virtual Sensor anomaly detection &amp; automated email dispatch (/api/sensors).
+    </p>
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+
+let resolvedStatusMap = {};
+
+document.addEventListener("DOMContentLoaded", function () {
+    scanLiveSensorsForLeaks();
+
+    document.getElementById("alertSearch").addEventListener("input", filterAlerts);
+    document.getElementById("severityFilter").addEventListener("change", filterAlerts);
+    document.getElementById("alertStatusFilter").addEventListener("change", filterAlerts);
+});
+
+async function scanLiveSensorsForLeaks() {
+    try {
+        const sRes = await fetch("/api/sensors");
+        const sData = await sRes.json();
+        const sensors = sData.sensors || [];
+
+        let detectedAlerts = [];
+
+        for (const s of sensors) {
+            const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
+            const rData = await rRes.json();
+            const readings = rData.readings || [];
+            const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+            const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
+
+            const isLeakScenario = s.scenario === "leak" || s.scenario === "burst";
+            const isHighFlow = flow > 110;
+
+            if (isLeakScenario || isHighFlow) {
+                const severity = (s.scenario === "burst" || flow > 150) ? "high" : "medium";
+                const alertId = "AL-" + s.sensor_id;
+                const currentStatus = resolvedStatusMap[alertId] || "pending";
+
+                detectedAlerts.push({
+                    alert_id: alertId,
+                    sensor_id: s.sensor_id,
+                    location: s.location_id,
+                    flow: flow,
+                    severity: severity,
+                    time: latest && latest.timestamp ? latest.timestamp : new Date().toLocaleTimeString(),
+                    status: currentStatus
+                });
+            }
+        }
+
+        const tbody = document.getElementById("alertTable");
+
+        if (detectedAlerts.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#15803d; font-weight:600;">
+                        ✅ No active leaks detected! (Tip: Switch a sensor to "Continuous Leak" or "Pipe Burst" in Virtual Sensors to test live alert & email dispatch.)
+                    </td>
+                </tr>`;
+            updateAlertSummary([]);
+            return;
+        }
+
+        tbody.innerHTML = "";
+        detectedAlerts.forEach(a => {
+            const sevLabel = a.severity === "high" ? "High" : "Medium";
+            const statusLabel = a.status === "resolved" ? "Resolved" : (a.status === "in-progress" ? "In Progress" : "Pending");
+
+            const tr = document.createElement("tr");
+            tr.dataset.severity = a.severity;
+            tr.dataset.status = a.status;
+            tr.innerHTML = `
+                <td><strong>${a.alert_id}</strong></td>
+                <td>${a.location} (${a.sensor_id})</td>
+                <td><strong>${a.flow.toFixed(1)} L/hour</strong></td>
+                <td><span class="severity ${a.severity}">${sevLabel}</span></td>
+                <td>${a.time}</td>
+                <td><span class="alert-status ${a.status}">${statusLabel}</span></td>
+                <td>
+                    <button class="btn-action" onclick="cycleAlertStatus('${a.alert_id}')">Update Status</button>
+                    <button class="btn-email" onclick="dispatchEmailAlert('${a.alert_id}', '${a.location}', '${a.sensor_id}', '${a.flow.toFixed(1)}', '${sevLabel}')">📧 Email Alert</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateAlertSummary(detectedAlerts);
+        filterAlerts();
+    } catch (err) {
+        console.error("Error scanning for leaks:", err);
+    }
+}
+
+function dispatchEmailAlert(alertId, location, sensorId, flow, severity) {
+    const toast = document.getElementById("emailToast");
+    toast.style.display = "block";
+    toast.innerHTML = `✅ Automated Leak Alert Email dispatched to <strong>maintenance@aquaguard.org</strong> — [${severity} Priority] ${alertId} at ${location} (${sensorId}) | Flow Rate: ${flow} L/hr`;
+
+    const subject = encodeURIComponent(`[AquaGuard ${severity} Alert] Water Leak Detected at ${location} (${sensorId})`);
+    const body = encodeURIComponent(
+        `URGENT WATER LEAKAGE NOTIFICATION\n\n` +
+        `Alert ID: ${alertId}\n` +
+        `Location: ${location}\n` +
+        `Sensor Node: ${sensorId}\n` +
+        `Severity: ${severity}\n` +
+        `Measured Flow Rate: ${flow} L/hour\n\n` +
+        `Action Required: Please inspect the pipeline valve and joints immediately.\n` +
+        `— AquaGuard Smart Water Monitoring System`
+    );
+
+    window.location.href = `mailto:maintenance@aquaguard.org?subject=${subject}&body=${body}`;
+}
+
+function cycleAlertStatus(alertId) {
+    const current = resolvedStatusMap[alertId] || "pending";
+    if (current === "pending") resolvedStatusMap[alertId] = "in-progress";
+    else if (current === "in-progress") resolvedStatusMap[alertId] = "resolved";
+    else resolvedStatusMap[alertId] = "pending";
+
+    scanLiveSensorsForLeaks();
+}
+
+function updateAlertSummary(alerts) {
+    const total = alerts.length;
+    const high = alerts.filter(a => a.severity === "high").length;
+    const medium = alerts.filter(a => a.severity === "medium").length;
+    const resolved = alerts.filter(a => a.status === "resolved").length;
+
+    document.getElementById("totalAlerts").textContent = String(total).padStart(2, "0");
+    document.getElementById("highAlerts").textContent = String(high).padStart(2, "0");
+    document.getElementById("mediumAlerts").textContent = String(medium).padStart(2, "0");
+    document.getElementById("resolvedAlerts").textContent = String(resolved).padStart(2, "0");
+}
+
+function filterAlerts() {
+    const search = document.getElementById("alertSearch").value.toLowerCase();
+    const severity = document.getElementById("severityFilter").value;
+    const status = document.getElementById("alertStatusFilter").value;
+    const rows = document.querySelectorAll("#alertTable tr");
+
+    rows.forEach(function (row) {
+        if (!row.dataset.severity) return;
+        const text = row.textContent.toLowerCase();
+        const rowSeverity = row.dataset.severity;
+        const rowStatus = row.dataset.status;
+
+        const searchMatch = text.includes(search);
+        const severityMatch = severity === "all" || rowSeverity === severity;
+        const statusMatch = status === "all" || rowStatus === status;
+
+        row.style.display = searchMatch && severityMatch && statusMatch ? "" : "none";
+    });
+}
+
+</script>
+{% endblock %}
