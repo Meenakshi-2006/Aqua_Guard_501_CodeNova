@@ -9,9 +9,22 @@ sensor_bp = Blueprint("sensor", __name__)
 
 @sensor_bp.route("/api/sensors", methods=["GET"])
 def get_sensors():
+    sensors_list = sensor_manager.get_all_sensors()
+
+    # Ensure every sensor dictionary exposes its active scenario accurately
+    if hasattr(sensor_manager, "sensors") and isinstance(sensor_manager.sensors, dict):
+        for item in sensors_list:
+            sid = item.get("sensor_id")
+            if sid in sensor_manager.sensors:
+                item["scenario"] = getattr(
+                    sensor_manager.sensors[sid],
+                    "scenario",
+                    item.get("scenario", "normal"),
+                )
+
     return jsonify({
         "success": True,
-        "sensors": sensor_manager.get_all_sensors(),
+        "sensors": sensors_list,
     })
 
 
@@ -99,7 +112,19 @@ def change_scenario(sensor_id):
         }), 400
 
     try:
-        sensor_manager.set_sensor_scenario(sensor_id, scenario)
+        # Support both short ('leak', 'burst') and long ('continuous_leak', 'pipe_burst') names
+        try:
+            sensor_manager.set_sensor_scenario(sensor_id, scenario)
+        except ValueError:
+            alias_map = {"leak": "continuous_leak", "burst": "pipe_burst"}
+            if scenario in alias_map:
+                sensor_manager.set_sensor_scenario(sensor_id, alias_map[scenario])
+            else:
+                raise
+
+        # Keep the exact frontend dropdown key stored on the sensor instance
+        if hasattr(sensor_manager, "sensors") and sensor_id in sensor_manager.sensors:
+            sensor_manager.sensors[sensor_id].scenario = scenario
 
         return jsonify({
             "success": True,

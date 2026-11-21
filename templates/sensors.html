@@ -235,22 +235,6 @@ Virtual Sensor Monitoring
     color: #b45309;
 }
 
-/* HEALTH INDICATOR */
-.health-good {
-    color: #16a34a;
-    font-weight: bold;
-}
-
-.health-medium {
-    color: #d97706;
-    font-weight: bold;
-}
-
-.health-poor {
-    color: #dc2626;
-    font-weight: bold;
-}
-
 /* NOTE */
 .demo-note {
     margin-top: 18px;
@@ -448,7 +432,8 @@ async function loadSensorsFromBackend() {
             const reading = latestReadingsMap[s.sensor_id];
             const flowVal = reading ? (reading.flow_rate ?? reading.flow ?? 0) : 0;
             const pressureVal = reading ? (reading.pressure ?? 2.2) : 0;
-            const isWarning = s.scenario && s.scenario !== "normal";
+            const currentScenario = s.scenario || "normal";
+            const isWarning = currentScenario !== "normal";
             const statusKey = !reading ? "offline" : (isWarning ? "warning" : "online");
             const statusLabel = !reading ? "Ready" : (isWarning ? "Leak Alert" : "Online");
 
@@ -461,9 +446,9 @@ async function loadSensorsFromBackend() {
                 <td>${Number(pressureVal).toFixed(1)} bar</td>
                 <td>
                     <select class="scenario-select" onchange="changeScenario('${s.sensor_id}', this.value)">
-                        <option value="normal" ${s.scenario === "normal" ? "selected" : ""}>Normal Flow</option>
-                        <option value="leak" ${s.scenario === "leak" ? "selected" : ""}>Continuous Leak</option>
-                        <option value="burst" ${s.scenario === "burst" ? "selected" : ""}>Pipe Burst</option>
+                        <option value="normal" ${currentScenario === "normal" ? "selected" : ""}>Normal Flow</option>
+                        <option value="leak" ${currentScenario === "leak" ? "selected" : ""}>Continuous Leak</option>
+                        <option value="burst" ${currentScenario === "burst" ? "selected" : ""}>Pipe Burst</option>
                     </select>
                 </td>
                 <td><span class="status ${statusKey}">${statusLabel}</span></td>
@@ -545,11 +530,16 @@ async function generateOneReading(sensorId) {
 
 // 5. Switch sensor scenario via POST /api/sensors/<id>/scenario
 async function changeScenario(sensorId, scenario) {
-    await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/scenario`, {
+    const res = await fetch(`/api/sensors/${encodeURIComponent(sensorId)}/scenario`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scenario: scenario })
     });
+    const data = await res.json();
+    if (!data.success) {
+        alert(data.error || "Could not update scenario");
+        return;
+    }
     await generateOneReading(sensorId);
 }
 
