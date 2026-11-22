@@ -73,13 +73,14 @@ Smart Inspection Management
 .inspection-filters select { flex: 1; min-width: 150px; }
 
 .inspection-table-wrapper { width: 100%; overflow-x: auto; }
-.inspection-table { width: 100%; min-width: 720px; border-collapse: collapse; text-align: left; }
+.inspection-table { width: 100%; min-width: 760px; border-collapse: collapse; text-align: left; }
 .inspection-table th { background: #edf5fb; color: #12345a; padding: 14px; font-size: 14px; }
 .inspection-table td { padding: 15px 14px; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 14px; }
 .inspection-table tr:hover { background: #f8fafc; }
 
 .priority { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 .high { background: #fee2e2; color: #dc2626; }
+.night { background: #e0e7ff; color: #3730a3; }
 .medium { background: #fef3c7; color: #b45309; }
 .low { background: #dcfce7; color: #15803d; }
 
@@ -118,7 +119,7 @@ Smart Inspection Management
 <div class="inspection-intro">
     <div>
         <h2>🔍 Smart Inspection Management</h2>
-        <p>Automatically rank high-risk locations by estimated daily water loss and track completed technician repairs.</p>
+        <p>Automatically rank high-risk locations by estimated daily water & ₹ loss and approve completed inspections.</p>
     </div>
     <button class="btn-refresh" onclick="loadInspectionsFromBackend()">🔄 Refresh Priority Ranking</button>
 </div>
@@ -127,7 +128,7 @@ Smart Inspection Management
 <div class="inspection-summary">
     <div class="inspection-card"><h3>Total Inspections</h3><h2 id="totalInspections">00</h2></div>
     <div class="inspection-card"><h3>High Priority (Open)</h3><h2 id="highPriority">00</h2></div>
-    <div class="inspection-card"><h3>Medium Priority (Open)</h3><h2 id="mediumPriority">00</h2></div>
+    <div class="inspection-card"><h3>Night / Medium (Open)</h3><h2 id="mediumPriority">00</h2></div>
     <div class="inspection-card"><h3>Completed</h3><h2 id="completedInspections">00</h2></div>
 </div>
 
@@ -140,8 +141,8 @@ Smart Inspection Management
         <select id="priorityFilter">
             <option value="all">All Open Priorities</option>
             <option value="high">High Priority</option>
+            <option value="night">Night Leak (2–4 AM)</option>
             <option value="medium">Medium Priority</option>
-            <option value="low">Low Priority</option>
         </select>
     </div>
 
@@ -152,7 +153,7 @@ Smart Inspection Management
                     <th>Rank</th>
                     <th>Inspection ID</th>
                     <th>Location</th>
-                    <th>Estimated Water Loss</th>
+                    <th>Est. Daily Loss (L & ₹)</th>
                     <th>Priority</th>
                     <th>Action</th>
                 </tr>
@@ -195,6 +196,8 @@ Smart Inspection Management
 
 {% block scripts %}
 <script>
+const TARIFF_PER_LITER = 0.08;
+
 function getCompletedMap() {
     try { return JSON.parse(localStorage.getItem("aquaguard_completed_inspections") || "{}"); }
     catch (e) { return {}; }
@@ -218,14 +221,15 @@ async function loadInspectionsFromBackend() {
         let sensors = sData.sensors || [];
 
         const user = getCurrentUser();
-        const isAdmin = !user.role || user.role === "admin";
+        // Both Admin and Management can approve/inspect pending items
+        const canApprove = !user.role || user.role === "admin" || user.role === "management";
         const completedMap = getCompletedMap();
 
         if (user.role === "resident" && user.location_id) {
             sensors = sensors.filter(s => s.location_id.toLowerCase() === user.location_id.toLowerCase());
         }
 
-        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak"];
+        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak", "night_leak"];
         const allItems = [];
 
         for (let idx = 0; idx < sensors.length; idx++) {
@@ -238,10 +242,11 @@ async function loadInspectionsFromBackend() {
             const baseline = Number(s.normal_flow || 60);
 
             const isBurst = s.scenario === "burst" || s.scenario === "burst_leak" || (s.scenario !== "normal" && flow > baseline * 1.8);
+            const isNight = s.scenario === "night_leak";
             const isLeak = leakScenarios.includes(s.scenario) || (s.scenario !== "normal" && flow > baseline * 1.3);
             const isCompleted = !!completedMap[s.sensor_id];
 
-            if (!isBurst && !isLeak && !isCompleted) continue;
+            if (!isBurst && !isNight && !isLeak && !isCompleted) continue;
 
             let priority = "low";
             let priorityLabel = "Resolved";
@@ -251,17 +256,24 @@ async function loadInspectionsFromBackend() {
                 priority = "high";
                 priorityLabel = "High";
                 dailyLoss = Math.round(flow * 6);
+            } else if (isNight) {
+                priority = "night";
+                priorityLabel = "Night Leak (2–4 AM)";
+                dailyLoss = Math.round(flow * 2);
             } else if (isLeak) {
                 priority = "medium";
                 priorityLabel = "Medium";
                 dailyLoss = Math.round(flow * 4);
             }
 
+            const lossInr = (dailyLoss * TARIFF_PER_LITER).toFixed(2);
+
             allItems.push({
                 inspId: `IN${String(idx + 1).padStart(3, "0")}`,
                 sensorId: s.sensor_id,
                 location: `${s.location_id} (${s.sensor_id})`,
                 dailyLoss: dailyLoss,
+                lossInr: lossInr,
                 priority: priority,
                 priorityLabel: priorityLabel
             });
@@ -284,7 +296,7 @@ async function loadInspectionsFromBackend() {
             openTbody.innerHTML = "";
             openItems.forEach((item, rankIdx) => {
                 if (item.priority === "high") highCount++;
-                else if (item.priority === "medium") mediumCount++;
+                else if (item.priority === "medium" || item.priority === "night") mediumCount++;
 
                 const tr = document.createElement("tr");
                 tr.dataset.priority = item.priority;
@@ -292,12 +304,12 @@ async function loadInspectionsFromBackend() {
                     <td><strong>#${rankIdx + 1}</strong></td>
                     <td><strong>${item.inspId}</strong></td>
                     <td>${item.location}</td>
-                    <td><strong>${item.dailyLoss} L/day</strong></td>
+                    <td><strong>${item.dailyLoss} L/day (₹${item.lossInr})</strong></td>
                     <td><span class="priority ${item.priority}">${item.priorityLabel}</span></td>
                     <td>
-                        ${isAdmin
-                            ? `<button class="inspect-btn" onclick="markInspectionComplete('${item.sensorId}', '${item.inspId}', '${item.location}', '${item.dailyLoss}', '${item.priority}', '${item.priorityLabel}')">✓ Mark Inspected</button>`
-                            : `<span style="color:#94a3b8; font-size:12px;">Pending (Read-Only)</span>`}
+                        ${canApprove
+                            ? `<button class="inspect-btn" onclick="markInspectionComplete('${item.sensorId}', '${item.inspId}', '${item.location}', '${item.dailyLoss}', '${item.lossInr}', '${item.priority}', '${item.priorityLabel}')">✓ Mark Inspected</button>`
+                            : `<span style="color:#94a3b8; font-size:12px;">Pending Approval</span>`}
                     </td>
                 `;
                 openTbody.appendChild(tr);
@@ -314,11 +326,11 @@ async function loadInspectionsFromBackend() {
                 tr.innerHTML = `
                     <td><strong>${item.inspId}</strong></td>
                     <td>${item.location}</td>
-                    <td>${item.dailyLoss} L/day</td>
+                    <td>${item.dailyLoss} L/day (₹${item.lossInr})</td>
                     <td><span class="priority low">Completed</span></td>
                     <td>${doneTime}</td>
                     <td>
-                        ${isAdmin
+                        ${canApprove
                             ? `<button class="reopen-btn" onclick="reopenInspection('${item.sensorId}')">Reopen</button>`
                             : `<span style="color:#15803d; font-size:12px; font-weight:600;">✔ Verified</span>`}
                     </td>
@@ -338,10 +350,13 @@ async function loadInspectionsFromBackend() {
     }
 }
 
-async function markInspectionComplete(sensorId, inspId, location, dailyLoss, priority, priorityLabel) {
+async function markInspectionComplete(sensorId, inspId, location, dailyLoss, lossInr, priority, priorityLabel) {
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const user = getCurrentUser();
+    const approver = user.name || "Authorized Staff";
+
     const completedMap = getCompletedMap();
-    completedMap[sensorId] = `Resolved Today at ${now}`;
+    completedMap[sensorId] = `Resolved by ${approver} at ${now}`;
     localStorage.setItem("aquaguard_completed_inspections", JSON.stringify(completedMap));
 
     try {
@@ -352,6 +367,7 @@ async function markInspectionComplete(sensorId, inspId, location, dailyLoss, pri
             sensorId,
             location,
             flowRate: (Number(dailyLoss) / 6).toFixed(1),
+            lossSummary: `${dailyLoss} L (₹${lossInr})`,
             severityKey: priority,
             severityLabel: priorityLabel,
             detTime: new Date().toISOString(),

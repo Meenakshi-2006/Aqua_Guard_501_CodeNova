@@ -1,144 +1,300 @@
-
 {% extends "base.html" %}
 
-{% block page_title %}Settings{% endblock %}
+{% block title %}Settings | AquaGuard{% endblock %}
 
-{% block content %}
+{% block page_title %}
+Account & System Settings
+{% endblock %}
 
+{% block styles %}
 <style>
-.settings-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
+.settings-intro { margin-bottom: 25px; }
+.settings-intro h2 { color: #12345a; font-size: 25px; margin-bottom: 8px; }
+.settings-intro p { color: #64748b; }
 
-.settings-card {
+.settings-panel {
     background: white;
-    padding: 22px;
+    padding: 25px;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 3px 12px rgba(15,39,71,0.05);
+    margin-bottom: 24px;
 }
+.settings-panel h3 { color: #12345a; font-size: 19px; margin-bottom: 16px; }
 
-.settings-card h3 {
-    margin-bottom: 18px;
-    color: #0f2747;
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
-
-.settings-card label {
-    display: block;
-    margin: 12px 0 6px;
-    font-weight: bold;
+.profile-item {
+    background: #f8fafc;
+    padding: 14px 16px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
 }
+.profile-item span { display: block; font-size: 12px; color: #64748b; margin-bottom: 4px; }
+.profile-item strong { color: #12345a; font-size: 15px; }
 
-.settings-card input {
-    width: 100%;
-    padding: 11px;
+.transfer-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+.transfer-form select,
+.transfer-form input {
+    padding: 11px 14px;
     border: 1px solid #cbd5e1;
-    border-radius: 6px;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 200px;
 }
-
-.settings-card input[type="checkbox"] {
-    width: auto;
-    margin-right: 8px;
-}
-
-.setting-option {
-    margin: 15px 0;
-}
-
-.save-btn {
-    margin-top: 20px;
-    padding: 12px 25px;
-    background: #0f766e;
+.btn-primary {
+    background: #1d4ed8;
     color: white;
     border: none;
-    border-radius: 7px;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.btn-primary:hover { background: #1e40af; }
+
+.req-table { width: 100%; border-collapse: collapse; text-align: left; }
+.req-table th { background: #edf5fb; color: #12345a; padding: 13px; font-size: 13.5px; }
+.req-table td { padding: 14px 13px; border-bottom: 1px solid #e2e8f0; font-size: 13.5px; color: #475569; }
+
+.badge { display: inline-block; padding: 4px 11px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+.pending { background: #fef3c7; color: #b45309; }
+.approved { background: #dcfce7; color: #15803d; }
+.rejected { background: #fee2e2; color: #dc2626; }
+
+.btn-approve {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 6px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 6px;
+}
+.btn-reject {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
 }
 
-.save-btn:hover {
-    background: #115e59;
-}
-
-@media(max-width: 700px) {
-    .settings-container {
-        grid-template-columns: 1fr;
-    }
-}
+@media (max-width: 800px) { .profile-grid { grid-template-columns: 1fr; } }
 </style>
+{% endblock %}
 
-<div class="settings-container">
 
-    <div class="settings-card">
-        <h3>👤 Profile Settings</h3>
+{% block content %}
 
-        <label>Name</label>
-        <input type="text" value="AquaGuard Admin">
-
-        <label>Email</label>
-        <input type="email" value="admin@aquaguard.com">
-
-        <label>Role</label>
-        <input type="text" value="Administrator" readonly>
-    </div>
-
-    <div class="settings-card">
-        <h3>🔔 Notification Settings</h3>
-
-        <div class="setting-option">
-            <label>
-                <input type="checkbox" checked>
-                Leak Detection Alerts
-            </label>
-        </div>
-
-        <div class="setting-option">
-            <label>
-                <input type="checkbox" checked>
-                High Water Usage Alerts
-            </label>
-        </div>
-
-        <div class="setting-option">
-            <label>
-                <input type="checkbox">
-                Daily Reports
-            </label>
-        </div>
-    </div>
-
-    <div class="settings-card">
-        <h3>💧 Leak Detection Thresholds</h3>
-
-        <label>High Flow Threshold (L/min)</label>
-        <input type="number" value="50" min="1">
-
-        <label>Night Flow Threshold (L/min)</label>
-        <input type="number" value="10" min="1">
-
-        <label>Alert Sensitivity</label>
-        <input type="number" value="75" min="1" max="100">
-    </div>
-
-    <div class="settings-card">
-        <h3>⚙️ System Information</h3>
-
-        <p><b>Application:</b> AquaGuard</p><br>
-        <p><b>Version:</b> 1.0.0</p><br>
-        <p><b>Platform:</b> Flask</p><br>
-        <p><b>Project:</b> Water Monitoring System</p>
-    </div>
-
+<div class="settings-intro">
+    <h2>⚙️ Account & Access Settings</h2>
+    <p>Manage your AquaGuard profile, tariff settings (₹80/kL), and block assignment requests.</p>
 </div>
 
-<button class="save-btn" onclick="saveSettings()">
-    Save Settings
-</button>
+<!-- ACTIVE PROFILE CARD -->
+<div class="settings-panel">
+    <h3>Active Account Profile</h3>
+    <div class="profile-grid">
+        <div class="profile-item"><span>Full Name</span><strong id="setUserName">—</strong></div>
+        <div class="profile-item"><span>Email Address</span><strong id="setUserEmail">—</strong></div>
+        <div class="profile-item"><span>Assigned Role & Block</span><strong id="setUserRoleBlock">—</strong></div>
+    </div>
+</div>
 
+<!-- RESIDENT ONLY: REQUEST BLOCK CHANGE -->
+<div class="settings-panel" id="residentTransferPanel" style="display:none;">
+    <h3>🏠 Request Block / Location Change</h3>
+    <p style="color:#64748b; font-size:14px; margin-bottom:14px;">
+        Moved to a different hostel block? Submit a transfer request below for Admin approval.
+    </p>
+    <div class="transfer-form">
+        <select id="requestedBlockSelect">
+            <option value="">-- Select New Block / Location --</option>
+        </select>
+        <input type="text" id="transferReasonInput" placeholder="Reason (e.g., Shifted to Room 204, Hostel Block B)">
+        <button class="btn-primary" onclick="submitBlockTransfer()">Submit Request to Admin</button>
+    </div>
+    <p id="transferFeedback" style="margin-top:12px; font-size:13.5px; font-weight:600;"></p>
+</div>
+
+<!-- ADMIN / RESIDENT: BLOCK TRANSFER REQUESTS LOG -->
+<div class="settings-panel" id="requestsInboxPanel">
+    <h3 id="requestsInboxTitle">📩 Resident Block Transfer Requests</h3>
+    <div style="overflow-x:auto;">
+        <table class="req-table">
+            <thead>
+                <tr>
+                    <th>Resident</th>
+                    <th>Current Block</th>
+                    <th>Requested Block</th>
+                    <th>Reason</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th id="reqActionCol">Action</th>
+                </tr>
+            </thead>
+            <tbody id="blockRequestsBody">
+                <tr><td colspan="7" style="text-align:center; color:#64748b;">Loading requests...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
 <script>
-function saveSettings() {
-    alert("Settings updated successfully! (Demo only)");
+let currentSettingsUser = {};
+
+document.addEventListener("DOMContentLoaded", async function () {
+    try {
+        const res = await fetch("/api/me");
+        if (res.ok) {
+            const data = await res.json();
+            if (data.user) {
+                currentSettingsUser = data.user;
+                localStorage.setItem("aquaguard_user", JSON.stringify(data.user));
+            }
+        }
+    } catch (e) {}
+
+    if (!currentSettingsUser.email) {
+        currentSettingsUser = JSON.parse(localStorage.getItem("aquaguard_user") || "{}");
+    }
+
+    const role = (currentSettingsUser.role || "admin").toLowerCase();
+    document.getElementById("setUserName").textContent = currentSettingsUser.name || "AquaGuard User";
+    document.getElementById("setUserEmail").textContent = currentSettingsUser.email || "—";
+    document.getElementById("setUserRoleBlock").textContent = role === "resident"
+        ? `Resident (${currentSettingsUser.location_id})`
+        : role.toUpperCase();
+
+    if (role === "resident") {
+        document.getElementById("residentTransferPanel").style.display = "block";
+        document.getElementById("requestsInboxTitle").textContent = "📋 My Block Transfer Requests";
+        await loadAvailableBlocksForResident();
+    } else if (role === "management") {
+        document.getElementById("requestsInboxPanel").style.display = "none";
+    }
+
+    await loadBlockRequests();
+});
+
+async function loadAvailableBlocksForResident() {
+    const sel = document.getElementById("requestedBlockSelect");
+    try {
+        const res = await fetch("/api/locations");
+        const data = await res.json();
+        (data.locations || []).forEach(l => {
+            if (l.name.toLowerCase() !== (currentSettingsUser.location_id || "").toLowerCase()) {
+                const opt = document.createElement("option");
+                opt.value = l.name;
+                opt.textContent = l.name;
+                sel.appendChild(opt);
+            }
+        });
+    } catch (e) {}
+}
+
+async function submitBlockTransfer() {
+    const reqBlock = document.getElementById("requestedBlockSelect").value;
+    const reason = document.getElementById("transferReasonInput").value.trim();
+    const fb = document.getElementById("transferFeedback");
+
+    if (!reqBlock) {
+        fb.style.color = "#dc2626";
+        fb.textContent = "Please select a new block first.";
+        return;
+    }
+
+    const res = await fetch("/api/block-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            user_email: currentSettingsUser.email,
+            user_name: currentSettingsUser.name,
+            current_location: currentSettingsUser.location_id,
+            requested_location: reqBlock,
+            reason: reason || "Block relocation request"
+        })
+    });
+    const data = await res.json();
+    if (data.success) {
+        fb.style.color = "#15803d";
+        fb.textContent = "✅ Transfer request submitted! Once Admin approves, your block updates automatically.";
+        document.getElementById("transferReasonInput").value = "";
+        loadBlockRequests();
+    } else {
+        fb.style.color = "#dc2626";
+        fb.textContent = data.error || "Could not submit request.";
+    }
+}
+
+async function loadBlockRequests() {
+    const role = (currentSettingsUser.role || "admin").toLowerCase();
+    if (role === "management") return;
+
+    try {
+        const res = await fetch("/api/block-requests");
+        const data = await res.json();
+        let requests = data.requests || [];
+
+        if (role === "resident") {
+            requests = requests.filter(r => r.user_email.toLowerCase() === (currentSettingsUser.email || "").toLowerCase());
+        }
+
+        const tbody = document.getElementById("blockRequestsBody");
+        if (requests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748b;">No block transfer requests found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        requests.forEach(r => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${r.user_name}</strong><br><small>${r.user_email}</small></td>
+                <td>${r.current_location}</td>
+                <td><strong>${r.requested_location}</strong></td>
+                <td>${r.reason || "—"}</td>
+                <td>${r.created_at}</td>
+                <td><span class="badge ${r.status}">${r.status.toUpperCase()}</span></td>
+                <td>
+                    ${role === "admin" && r.status === "pending"
+                        ? `<button class="btn-approve" onclick="decideRequest(${r.id}, 'approved')">✓ Approve</button>
+                           <button class="btn-reject" onclick="decideRequest(${r.id}, 'rejected')">✕ Reject</button>`
+                        : `<span>${r.status === "approved" ? "✔ Updated in DB" : "—"}</span>`}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (e) {}
+}
+
+async function decideRequest(reqId, decision) {
+    const res = await fetch(`/api/block-requests/${reqId}/decision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision })
+    });
+    const data = await res.json();
+    if (data.success) loadBlockRequests();
 }
 </script>
-
 {% endblock %}

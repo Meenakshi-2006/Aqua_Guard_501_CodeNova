@@ -71,9 +71,7 @@
             color: #ffffff;
         }
 
-        .sidebar-footer {
-            margin-top: 24px;
-        }
+        .sidebar-footer { margin-top: 24px; }
 
         .sidebar-user-box {
             background: rgba(255, 255, 255, 0.08);
@@ -84,16 +82,8 @@
             color: #e2e8f0;
         }
 
-        .sidebar-user-name {
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        .sidebar-user-role {
-            color: #93c5fd;
-            font-size: 11.5px;
-            margin-top: 3px;
-        }
+        .sidebar-user-name { font-weight: 700; color: #ffffff; }
+        .sidebar-user-role { color: #93c5fd; font-size: 11.5px; margin-top: 3px; }
 
         .logout-link {
             display: inline-block;
@@ -103,10 +93,7 @@
             font-weight: 600;
             font-size: 12px;
         }
-
-        .logout-link:hover {
-            text-decoration: underline;
-        }
+        .logout-link:hover { text-decoration: underline; }
 
         .sidebar-copy {
             font-size: 12px;
@@ -133,10 +120,7 @@
             align-items: center;
         }
 
-        .topbar h1 {
-            font-size: 20px;
-            color: #12345a;
-        }
+        .topbar h1 { font-size: 20px; color: #12345a; }
 
         .topbar-badge {
             background: #eff6ff;
@@ -147,10 +131,7 @@
             font-weight: 600;
         }
 
-        .content-area {
-            padding: 28px;
-            flex: 1;
-        }
+        .content-area { padding: 28px; flex: 1; }
 
         /* FLOATING AI CHATBOT WIDGET */
         .ag-chat-toggle {
@@ -177,7 +158,7 @@
             position: fixed;
             bottom: 82px;
             right: 24px;
-            width: 340px;
+            width: 350px;
             max-width: calc(100vw - 32px);
             background: #ffffff;
             border-radius: 14px;
@@ -209,7 +190,7 @@
 
         .ag-chat-messages {
             padding: 14px;
-            height: 260px;
+            height: 265px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -224,16 +205,9 @@
             line-height: 1.45;
             max-width: 88%;
         }
-        .ag-msg-bot {
-            background: #e0f2fe;
-            color: #0c4a6e;
-            align-self: flex-start;
-        }
-        .ag-msg-user {
-            background: #1d4ed8;
-            color: #ffffff;
-            align-self: flex-end;
-        }
+        .ag-msg-bot { background: #e0f2fe; color: #0c4a6e; align-self: flex-start; }
+        .ag-msg-denied { background: #fee2e2; color: #991b1b; align-self: flex-start; border-left: 3px solid #dc2626; }
+        .ag-msg-user { background: #1d4ed8; color: #ffffff; align-self: flex-end; }
 
         .ag-quick-chips {
             display: flex;
@@ -277,43 +251,35 @@
         }
 
         @media (max-width: 850px) {
-            .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
-            }
-            body {
-                flex-direction: column;
-            }
-            .main-wrapper {
-                margin-left: 0;
-            }
+            .sidebar { position: static; width: 100%; height: auto; }
+            body { flex-direction: column; }
+            .main-wrapper { margin-left: 0; }
         }
     </style>
     {% block styles %}{% endblock %}
 </head>
 <body>
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (ROLE-TAILORED VISIBILITY) -->
     <aside class="sidebar">
         <div>
             <div class="brand">💧 AquaGuard</div>
-            <nav class="nav-links">
-                <a href="/" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a>
-                <a href="/sensors" class="{% if request.path == '/sensors' %}active{% endif %}">📡 Virtual Sensors</a>
-                <a href="/readings" class="{% if request.path == '/readings' %}active{% endif %}">📋 Readings</a>
-                <a href="/analytics" class="{% if request.path == '/analytics' %}active{% endif %}">📈 Analytics</a>
-                <a href="/alerts" class="{% if request.path == '/alerts' %}active{% endif %}">⚠️ Leak Alerts</a>
-                <a href="/inspection" class="{% if request.path == '/inspection' %}active{% endif %}">🔍 Inspection</a>
-                <a href="/locations" class="{% if request.path == '/locations' %}active{% endif %}">📍 Locations</a>
-                <a href="/settings" class="{% if request.path == '/settings' %}active{% endif %}">⚙️ Settings</a>
+            <nav class="nav-links" id="sidebarNavLinks">
+                <a href="/" data-roles="admin,management,resident" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a>
+                <a href="/sensors" data-roles="admin,management,resident" class="{% if request.path == '/sensors' %}active{% endif %}">📡 Virtual Sensors</a>
+                <a href="/readings" data-roles="management" class="{% if request.path == '/readings' %}active{% endif %}">📋 Readings</a>
+                <a href="/analytics" data-roles="management" class="{% if request.path == '/analytics' %}active{% endif %}">📈 Analytics</a>
+                <a href="/alerts" data-roles="admin,management,resident" class="{% if request.path == '/alerts' %}active{% endif %}">⚠️ Leak Alerts</a>
+                <a href="/inspection" data-roles="admin,management" class="{% if request.path == '/inspection' %}active{% endif %}">🔍 Inspection</a>
+                <a href="/locations" data-roles="admin,management" class="{% if request.path == '/locations' %}active{% endif %}">📍 Locations</a>
+                <a href="/settings" data-roles="admin,management,resident" class="{% if request.path == '/settings' %}active{% endif %}">⚙️ Settings</a>
             </nav>
         </div>
 
         <div class="sidebar-footer">
             <div class="sidebar-user-box" id="sidebarUserBox">
                 <div class="sidebar-user-name" id="sidebarUserName">AquaGuard Admin</div>
-                <div class="sidebar-user-role" id="sidebarUserRole">Role: Admin (All Access)</div>
+                <div class="sidebar-user-role" id="sidebarUserRole">Role: Admin</div>
                 <a href="/logout" class="logout-link" onclick="localStorage.removeItem('aquaguard_user')">⎋ Logout</a>
             </div>
             <div class="sidebar-copy">
@@ -344,14 +310,14 @@
             <button class="ag-chat-close" onclick="toggleAgChat()">×</button>
         </div>
         <div class="ag-chat-messages" id="agChatMessages">
-            <div class="ag-msg ag-msg-bot">
-                Hi! Ask me about <strong>active leaks</strong>, <strong>total water usage</strong>, <strong>sensor health</strong>, or <strong>inspection priority</strong>.
+            <div class="ag-msg ag-msg-bot" id="agWelcomeMsg">
+                Hi! Ask me about <strong>active leaks</strong>, <strong>2–4 AM night flow</strong>, <strong>water loss in ₹</strong>, or <strong>sensor health</strong>.
             </div>
         </div>
         <div class="ag-quick-chips">
             <button class="ag-chip" onclick="sendAgQuick('Any active leaks?')">Any active leaks?</button>
-            <button class="ag-chip" onclick="sendAgQuick('Highest water usage?')">Highest usage?</button>
-            <button class="ag-chip" onclick="sendAgQuick('System summary')">System summary</button>
+            <button class="ag-chip" onclick="sendAgQuick('Water loss in rupees?')">Loss in ₹?</button>
+            <button class="ag-chip" onclick="sendAgQuick('System summary')">My summary</button>
         </div>
         <div class="ag-chat-input-row">
             <input type="text" id="agChatInput" placeholder="Ask about water telemetry..." onkeydown="if(event.key==='Enter') sendAgChat()">
@@ -360,38 +326,56 @@
     </div>
 
     <script>
+        let activeSessionUser = null;
+
         (async function syncSidebarUser() {
-            let user = null;
             try {
                 const res = await fetch("/api/me");
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.user) user = data.user;
+                    if (data.user) {
+                        activeSessionUser = data.user;
+                        localStorage.setItem("aquaguard_user", JSON.stringify(data.user));
+                    }
                 }
             } catch (e) {}
 
-            if (!user) {
-                const saved = localStorage.getItem("aquaguard_user");
-                if (saved) {
-                    try { user = JSON.parse(saved); } catch (e) {}
-                }
+            if (!activeSessionUser) {
+                try { activeSessionUser = JSON.parse(localStorage.getItem("aquaguard_user") || "null"); }
+                catch (e) {}
             }
 
-            if (user) {
+            if (activeSessionUser) {
+                const role = (activeSessionUser.role || "admin").toLowerCase();
                 const nameEl = document.getElementById("sidebarUserName");
                 const roleEl = document.getElementById("sidebarUserRole");
                 const topBadge = document.getElementById("topbarRoleBadge");
 
-                if (nameEl) nameEl.textContent = user.name || user.email;
+                if (nameEl) nameEl.textContent = activeSessionUser.name || activeSessionUser.email;
                 if (roleEl) {
-                    roleEl.textContent = user.role === "resident"
-                        ? `Resident • ${user.location_id}`
-                        : `Role: ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
+                    roleEl.textContent = role === "resident"
+                        ? `Resident • ${activeSessionUser.location_id}`
+                        : `Role: ${role.charAt(0).toUpperCase() + role.slice(1)}`;
                 }
                 if (topBadge) {
-                    topBadge.textContent = user.role === "resident"
-                        ? `Block View: ${user.location_id}`
-                        : `${user.role.toUpperCase()} MODE`;
+                    topBadge.textContent = role === "resident"
+                        ? `Block View: ${activeSessionUser.location_id}`
+                        : `${role.toUpperCase()} MODE`;
+                }
+
+                // Filter sidebar links strictly by role
+                document.querySelectorAll("#sidebarNavLinks a").forEach(link => {
+                    const allowed = (link.dataset.roles || "").split(",");
+                    if (!allowed.includes(role)) {
+                        link.style.display = "none";
+                    }
+                });
+
+                if (role === "resident") {
+                    const welcomeEl = document.getElementById("agWelcomeMsg");
+                    if (welcomeEl) {
+                        welcomeEl.innerHTML = `Hi <strong>${activeSessionUser.name}</strong>! I can share live water usage, leak alerts, and ₹ loss for your assigned block (<strong>${activeSessionUser.location_id}</strong>).`;
+                    }
                 }
             }
         })();
@@ -416,53 +400,87 @@
             msgBox.innerHTML += `<div class="ag-msg ag-msg-user">${query}</div>`;
             msgBox.scrollTop = msgBox.scrollHeight;
 
-            let reply = "";
+            const user = activeSessionUser || JSON.parse(localStorage.getItem("aquaguard_user") || "{}");
+            const role = (user.role || "admin").toLowerCase();
+            const assignedBlock = (user.location_id || "").trim();
+            const q = query.toLowerCase();
+
             try {
                 const sRes = await fetch("/api/sensors");
                 const sData = await sRes.json();
-                let sensors = sData.sensors || [];
+                const allSensors = sData.sensors || [];
 
-                const savedUser = JSON.parse(localStorage.getItem("aquaguard_user") || "{}");
-                if (savedUser.role === "resident" && savedUser.location_id) {
-                    sensors = sensors.filter(s => s.location_id.toLowerCase() === savedUser.location_id.toLowerCase());
+                // STRICT RESIDENT ACCESS CONTROL CHECK IN AI CHATBOT
+                if (role === "resident" && assignedBlock) {
+                    const otherBlocks = [...new Set(allSensors.map(s => s.location_id))]
+                        .filter(loc => loc.toLowerCase() !== assignedBlock.toLowerCase());
+
+                    const askedAnotherBlock = otherBlocks.some(b => q.includes(b.toLowerCase())) ||
+                        q.includes("all block") || q.includes("all campus") || q.includes("other block") || q.includes("every location");
+
+                    if (askedAnotherBlock) {
+                        msgBox.innerHTML += `<div class="ag-msg ag-msg-denied">🔒 <strong>Access Restricted:</strong> As a Resident of <strong>${assignedBlock}</strong>, I do not have access to water telemetry, leaks, or consumption records for other campus blocks.</div>`;
+                        msgBox.scrollTop = msgBox.scrollHeight;
+                        return;
+                    }
                 }
+
+                // Scope sensors: Resident sees ONLY assignedBlock; Admin & Management see ALL
+                const scopedSensors = (role === "resident" && assignedBlock)
+                    ? allSensors.filter(s => s.location_id.toLowerCase() === assignedBlock.toLowerCase())
+                    : allSensors;
 
                 const details = [];
                 let totalFlow = 0;
-                for (const s of sensors) {
+                let totalLossLiters = 0;
+                const TARIFF_PER_LITER = 0.08; // ₹0.08 per Liter (₹80 per 1,000 L)
+
+                for (const s of scopedSensors) {
                     const rRes = await fetch(`/api/sensors/${encodeURIComponent(s.sensor_id)}/readings`);
                     const rData = await rRes.json();
                     const readings = rData.readings || [];
                     const latest = readings.length > 0 ? readings[readings.length - 1] : null;
                     const flow = latest ? Number(latest.flow_rate ?? latest.flow ?? 0) : 0;
                     totalFlow += flow;
-                    details.push({ ...s, flow });
+
+                    const isLeak = s.scenario && s.scenario !== "normal";
+                    const lossL = isLeak ? Math.round(flow * (s.scenario === "burst_leak" ? 6 : 4)) : 0;
+                    totalLossLiters += lossL;
+                    details.push({ ...s, flow, isLeak, lossL, lossInr: (lossL * TARIFF_PER_LITER).toFixed(2) });
                 }
 
-                const leaks = details.filter(d => d.scenario && d.scenario !== "normal");
+                const leaks = details.filter(d => d.isLeak);
                 const topSensor = [...details].sort((a, b) => b.flow - a.flow)[0];
-                const q = query.toLowerCase();
+                const totalRupees = (totalLossLiters * TARIFF_PER_LITER).toFixed(2);
+                let reply = "";
 
-                if (sensors.length === 0) {
-                    reply = "No sensors are active yet. Go to <strong>Virtual Sensors</strong> and click <em>+ Load 4 Demo Virtual Sensors</em>.";
-                } else if (q.includes("leak") || q.includes("alert") || q.includes("burst") || q.includes("priority")) {
-                    if (leaks.length === 0) {
-                        reply = `✅ Great news! All <strong>${sensors.length}</strong> monitored sensors are operating in Normal Flow with zero active leaks.`;
+                if (scopedSensors.length === 0) {
+                    reply = role === "resident"
+                        ? `No active virtual sensor is assigned to <strong>${assignedBlock}</strong> yet.`
+                        : "No sensors are active yet. Go to <strong>Virtual Sensors</strong> and load demo sensors.";
+                } else if (q.includes("rupee") || q.includes("cost") || q.includes("money") || q.includes("loss") || q.includes("₹")) {
+                    if (totalLossLiters === 0) {
+                        reply = `✅ Zero water loss! No active leaks detected${role === "resident" ? ` in <strong>${assignedBlock}</strong>` : ""}, so financial wastage is <strong>₹0.00</strong>.`;
                     } else {
-                        const list = leaks.map(l => `• <strong>${l.location_id} (${l.sensor_id})</strong>: ${l.scenario.replace("_", " ")} at ${l.flow.toFixed(1)} L/hr`).join("<br>");
-                        reply = `🚨 Found <strong>${leaks.length}</strong> active leak(s):<br>${list}<br>Open <strong>Leak Alerts</strong> or <strong>Inspection</strong> to resolve.`;
+                        reply = `💸 <strong>Estimated Water & Financial Wastage:</strong><br>• Water Lost: <strong>${totalLossLiters.toLocaleString()} L/day</strong><br>• Financial Loss: <strong>₹${totalRupees}/day</strong> (@ ₹80/kL tariff)`;
                     }
-                } else if (q.includes("high") || q.includes("usage") || q.includes("consumption") || q.includes("flow")) {
-                    reply = `💧 Total current flow across <strong>${sensors.length}</strong> sensors is <strong>${totalFlow.toFixed(1)} L/hr</strong>. Highest flow is at <strong>${topSensor.location_id} (${topSensor.sensor_id})</strong> with <strong>${topSensor.flow.toFixed(1)} L/hr</strong>.`;
+                } else if (q.includes("leak") || q.includes("alert") || q.includes("burst") || q.includes("night")) {
+                    if (leaks.length === 0) {
+                        reply = `✅ All <strong>${scopedSensors.length}</strong> sensor(s)${role === "resident" ? ` in <strong>${assignedBlock}</strong>` : ""} are in Normal Flow with zero active leaks.`;
+                    } else {
+                        const list = leaks.map(l => `• <strong>${l.location_id} (${l.sensor_id})</strong>: ${l.scenario.replace("_", " ")} (${l.flow.toFixed(1)} L/hr • Loss: ₹${l.lossInr}/day)`).join("<br>");
+                        reply = `🚨 Found <strong>${leaks.length}</strong> active leak(s):<br>${list}`;
+                    }
                 } else {
-                    reply = `📊 <strong>Live AquaGuard Summary:</strong><br>• Active Sensors: ${sensors.length}<br>• Total Flow: ${totalFlow.toFixed(1)} L/hr<br>• Active Leaks: ${leaks.length}<br>• Top Consumer: ${topSensor.location_id} (${topSensor.flow.toFixed(1)} L/hr)`;
+                    const scopeTitle = role === "resident" ? `Block Summary (${assignedBlock})` : "Live Campus Summary";
+                    reply = `📊 <strong>${scopeTitle}:</strong><br>• Active Sensors: ${scopedSensors.length}<br>• Current Flow: ${totalFlow.toFixed(1)} L/hr<br>• Active Leaks: ${leaks.length}<br>• Daily Wastage: ${totalLossLiters} L (<strong>₹${totalRupees}</strong>)<br>• Highest Flow: ${topSensor.location_id} (${topSensor.flow.toFixed(1)} L/hr)`;
                 }
-            } catch (e) {
-                reply = "Unable to fetch live sensor telemetry right now. Ensure the Flask server is running.";
-            }
 
-            msgBox.innerHTML += `<div class="ag-msg ag-msg-bot">${reply}</div>`;
-            msgBox.scrollTop = msgBox.scrollHeight;
+                msgBox.innerHTML += `<div class="ag-msg ag-msg-bot">${reply}</div>`;
+                msgBox.scrollTop = msgBox.scrollHeight;
+            } catch (e) {
+                msgBox.innerHTML += `<div class="ag-msg ag-msg-bot">Unable to fetch live sensor telemetry right now.</div>`;
+            }
         }
     </script>
     {% block scripts %}{% endblock %}

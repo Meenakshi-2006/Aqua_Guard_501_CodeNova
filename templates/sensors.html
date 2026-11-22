@@ -106,7 +106,7 @@ Virtual Sensor Monitoring
 .sensor-controls select { width: 35%; background: white; }
 
 .sensor-table-wrapper { width: 100%; overflow-x: auto; }
-.sensor-table { width: 100%; border-collapse: collapse; min-width: 640px; text-align: left; }
+.sensor-table { width: 100%; border-collapse: collapse; min-width: 680px; text-align: left; }
 .sensor-table th { background: #edf5fb; color: #12345a; padding: 15px; font-size: 14px; }
 .sensor-table td { padding: 16px 15px; color: #475569; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
 .sensor-table tbody tr:hover { background: #f8fafc; }
@@ -128,6 +128,7 @@ Virtual Sensor Monitoring
 .online { background: #dcfce7; color: #15803d; }
 .offline { background: #e2e8f0; color: #475569; }
 .warning { background: #fef3c7; color: #b45309; }
+.night { background: #e0e7ff; color: #3730a3; }
 .burst { background: #fee2e2; color: #dc2626; }
 .demo-note { margin-top: 18px; color: #64748b; font-size: 13px; }
 
@@ -148,12 +149,12 @@ Virtual Sensor Monitoring
 <div class="sensor-intro">
     <div>
         <h2>💧 Virtual Sensor Monitoring</h2>
-        <p id="sensorPageSubtitle">Monitor water flow, pressure and virtual sensor health across different locations.</p>
+        <p id="sensorPageSubtitle">Monitor water flow, pressure, 2–4 AM night flow anomalies, and virtual sensor health.</p>
     </div>
     <button class="btn-primary admin-only" id="seedSensorsBtn" onclick="seedDemoSensors()">+ Load 4 Demo Virtual Sensors</button>
 </div>
 
-<!-- ADD NEW VIRTUAL SENSOR (ADMIN ONLY WITH DROPDOWN + CUSTOM NEW LOCATION OPTION) -->
+<!-- ADD NEW VIRTUAL SENSOR (ADMIN ONLY) -->
 <div class="add-sensor-panel admin-only" id="addSensorPanel">
     <h3>Add Virtual Sensor Node</h3>
     <div class="add-sensor-form">
@@ -171,7 +172,7 @@ Virtual Sensor Monitoring
 <div class="sensor-summary">
     <div class="sensor-card"><h3>Total Sensors</h3><h2 id="totalSensors">00</h2></div>
     <div class="sensor-card"><h3>Online Sensors</h3><h2 id="onlineSensors">00</h2></div>
-    <div class="sensor-card"><h3>Warning / Leak</h3><h2 id="warningSensors">00</h2></div>
+    <div class="sensor-card"><h3>Warning / Night Leak</h3><h2 id="warningSensors">00</h2></div>
     <div class="sensor-card"><h3>Offline Sensors</h3><h2 id="offlineSensors">00</h2></div>
 </div>
 
@@ -208,7 +209,7 @@ Virtual Sensor Monitoring
         </table>
     </div>
 
-    <p class="demo-note" id="sensorStatusMsg">Connected to Backend Virtual Sensor Engine (/api/sensors).</p>
+    <p class="demo-note" id="sensorStatusMsg">Connected to SQLite Virtual Sensor Engine (/api/sensors).</p>
 </div>
 
 {% endblock %}
@@ -257,7 +258,7 @@ async function detectUserRole() {
         banner.style.display = "block";
         banner.textContent = currentUser.role === "resident"
             ? `🔒 Resident View (${currentUser.location_id}): Showing live sensors assigned exclusively to your block.`
-            : "👁️ Management View (Read-Only): You have full visibility across all campus locations.";
+            : "🛠️ Management View: You can test leak scenarios and approve/resolve alerts across all blocks (adding new locations/sensors is Admin-only).";
     }
 }
 
@@ -324,6 +325,7 @@ function toggleCustomLocationInput() {
 
 function normalizeScenario(raw) {
     if (!raw) return "normal";
+    if (raw === "night_leak") return "night_leak";
     if (raw === "leak" || raw === "continuous_leak") return "continuous_leak";
     if (raw === "burst" || raw === "burst_leak") return "burst_leak";
     if (raw === "gradual" || raw === "gradual_leak") return "gradual_leak";
@@ -343,13 +345,13 @@ async function loadSensorsFromBackend() {
         }
 
         const tbody = document.getElementById("sensorTable");
-        const isAdmin = currentUser.role === "admin";
+        const canControlScenarios = currentUser.role === "admin" || currentUser.role === "management";
 
         if (sensors.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align:center; color:#64748b;">
-                        ${isAdmin
+                        ${currentUser.role === "admin"
                             ? 'No virtual sensors added yet. Click "+ Load 4 Demo Virtual Sensors" above to start!'
                             : 'No sensors active for your location yet.'}
                     </td>
@@ -375,11 +377,12 @@ async function loadSensorsFromBackend() {
             const pressureVal = reading ? (reading.pressure ?? 2.2) : 0;
             const currentScenario = normalizeScenario(s.scenario);
             const isBurst = currentScenario === "burst_leak";
-            const isWarning = currentScenario !== "normal" && !isBurst;
+            const isNight = currentScenario === "night_leak";
+            const isWarning = currentScenario !== "normal" && !isBurst && !isNight;
 
             const filterStatus = !reading ? "offline" : (currentScenario !== "normal" ? "warning" : "online");
-            const badgeClass = !reading ? "offline" : (isBurst ? "burst" : (isWarning ? "warning" : "online"));
-            const statusLabel = !reading ? "Ready" : (isBurst ? "Pipe Burst" : (isWarning ? "Leak Alert" : "Online"));
+            const badgeClass = !reading ? "offline" : (isBurst ? "burst" : (isNight ? "night" : (isWarning ? "warning" : "online")));
+            const statusLabel = !reading ? "Ready" : (isBurst ? "Pipe Burst" : (isNight ? "Night Leak (2–4 AM)" : (isWarning ? "Leak Alert" : "Online")));
 
             const tr = document.createElement("tr");
             tr.dataset.status = filterStatus;
@@ -389,8 +392,9 @@ async function loadSensorsFromBackend() {
                 <td>${Number(flowVal).toFixed(1)} L/hour</td>
                 <td>${Number(pressureVal).toFixed(1)} bar</td>
                 <td>
-                    <select class="scenario-select" ${isAdmin ? "" : "disabled"} onchange="changeScenario('${s.sensor_id}', this.value)">
+                    <select class="scenario-select" ${canControlScenarios ? "" : "disabled"} onchange="changeScenario('${s.sensor_id}', this.value)">
                         <option value="normal" ${currentScenario === "normal" ? "selected" : ""}>Normal Flow</option>
+                        <option value="night_leak" ${currentScenario === "night_leak" ? "selected" : ""}>Night Leak (2–4 AM)</option>
                         <option value="continuous_leak" ${currentScenario === "continuous_leak" ? "selected" : ""}>Continuous Leak</option>
                         <option value="gradual_leak" ${currentScenario === "gradual_leak" ? "selected" : ""}>Gradual Leak</option>
                         <option value="burst_leak" ${currentScenario === "burst_leak" ? "selected" : ""}>Pipe Burst</option>
@@ -412,7 +416,7 @@ async function addNewSensor() {
     const sensorId = document.getElementById("newSensorId").value.trim();
     const select = document.getElementById("newLocationId");
     const customInput = document.getElementById("customLocationInput");
-    const normalFlow = parseFloat(document.getElementById("newNormalFlow").value) || 40;
+    const normalFlow = parseFloat(document.getElementById("newNormalFlow").value) || 45;
 
     let locationId = select.value;
 
@@ -426,7 +430,7 @@ async function addNewSensor() {
 
         const existingLocations = getAllKnownLocations();
         if (existingLocations.some(l => l.toLowerCase() === newLocName.toLowerCase())) {
-            alert(`"${newLocName}" already exists! Please select it from the dropdown or enter a different new location.`);
+            alert(`"${newLocName}" already exists! Please select it from the dropdown.`);
             return;
         }
 

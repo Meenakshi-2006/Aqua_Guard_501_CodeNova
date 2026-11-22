@@ -57,6 +57,19 @@ def init_db():
     """)
 
     cur.execute("""
+        CREATE TABLE IF NOT EXISTS block_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_email TEXT NOT NULL,
+            user_name TEXT NOT NULL,
+            current_location TEXT NOT NULL,
+            requested_location TEXT NOT NULL,
+            reason TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT NOT NULL
+        )
+    """)
+
+    cur.execute("""
         INSERT OR IGNORE INTO users (email, name, password, role, location_id)
         VALUES (?, ?, ?, ?, ?)
     """, ("admin@aquaguard.org", "AquaGuard Admin", "admin123", "admin", None))
@@ -67,10 +80,10 @@ def init_db():
     """, ("manager@aquaguard.org", "Campus Manager", "manager123", "management", None))
 
     default_locations = [
-        ("Main Gate Inlet", "Main Supply"),
+        ("Main Gate Inlet", "Tank / Pump House"),
         ("Hostel Block A", "Residential Block"),
-        ("Hostel Block B Tank", "Storage Tank"),
-        ("Mess & Kitchen", "Utility Zone")
+        ("Hostel Block B Tank", "Tank / Pump House"),
+        ("Mess & Kitchen", "Cafeteria / Utility")
     ]
     for loc_name, loc_type in default_locations:
         cur.execute("INSERT OR IGNORE INTO locations (name, type) VALUES (?, ?)", (loc_name, loc_type))
@@ -157,10 +170,20 @@ def register():
 
 @app.route("/api/me", methods=["GET"])
 def get_current_user():
-    user = session.get("user")
-    if not user:
+    sess_user = session.get("user")
+    if not sess_user:
         return jsonify({"success": False, "user": None}), 401
-    return jsonify({"success": True, "user": user}), 200
+
+    # Always refresh location_id from DB in case an Admin approved a block transfer
+    conn = get_db()
+    row = conn.execute("SELECT email, name, role, location_id FROM users WHERE email = ?", (sess_user["email"],)).fetchone()
+    conn.close()
+    if row:
+        updated_user = dict(row)
+        session["user"] = updated_user
+        return jsonify({"success": True, "user": updated_user}), 200
+
+    return jsonify({"success": True, "user": sess_user}), 200
 
 
 @app.route("/logout", methods=["GET", "POST"])
@@ -171,7 +194,64 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ---------------- UNIFIED SENSOR, SCENARIO & RESOLUTION APIS ----------------
+# ---------------- BLOCK TRANSFER REQUESTS (RESIDENT -> ADMIN) ----------------
+
+@app.route("/api/block-requests", methods=["GET", "POST"])
+def api_block_requests():
+    conn = get_db()
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        email = (data.get("user_email") or "").strip().lower()
+        name = (data.get("user_name") or "").strip()
+        curr_loc = (data.get("current_location") or "").strip()
+        req_loc = (data.get("requested_location") or "").strip()
+        reason = (data.get("reason") or "").strip()
+
+        if not email or not req_loc:
+            conn.close()
+            return jsonify({"success": False, "error": "Requested block is required."}), 400
+
+        if curr_loc.lower() == req_loc.lower():
+            conn.close()
+            return jsonify({"success": False, "error": "You are already assigned to this block."}), 400
+
+        ts = datetime.now().strftime("%Y-%m-%d %I:%M %p")
+        conn.execute("""
+            INSERT INTO block_requests (user_email, user_name, current_location, requested_location, reason, status, created_at)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?)
+        """, (email, name, curr_loc, req_loc, reason, ts))
+        conn.commit()
+        conn.close()
+        return jsonify({"success": True, "message": "Block transfer request sent to Admin."}), 201
+
+    rows = conn.execute("SELECT * FROM block_requests ORDER BY id DESC").fetchall()
+    conn.close()
+    return jsonify({"success": True, "requests": [dict(r) for r in rows]})
+
+
+@app.route("/api/block-requests/<int:req_id>/decision", methods=["POST"])
+def api_block_request_decision(req_id):
+    data = request.get_json(silent=True) or {}
+    decision = (data.get("decision") or "").strip().lower()
+    if decision not in ("approved", "rejected"):
+        return jsonify({"success": False, "error": "Invalid decision"}), 400
+
+    conn = get_db()
+    req_row = conn.execute("SELECT * FROM block_requests WHERE id = ?", (req_id,)).fetchone()
+    if not req_row:
+        conn.close()
+        return jsonify({"success": False, "error": "Request not found"}), 404
+
+    conn.execute("UPDATE block_requests SET status = ? WHERE id = ?", (decision, req_id))
+    if decision == "approved":
+        conn.execute("UPDATE users SET location_id = ? WHERE email = ?", (req_row["requested_location"], req_row["user_email"]))
+
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "status": decision})
+
+
+# ---------------- SENSOR, NIGHT LEAK & LOCATION APIS ----------------
 
 @app.route("/api/locations", methods=["GET", "POST"])
 def api_locations():
@@ -198,7 +278,7 @@ def api_sensors():
         data = request.get_json(silent=True) or {}
         sensor_id = (data.get("sensor_id") or "").strip()
         location_id = (data.get("location_id") or "").strip()
-        normal_flow = float(data.get("normal_flow") or 50.0)
+        normal_flow = float(data.get("normal_flow") or 45.0)
 
         if not sensor_id or not location_id:
             conn.close()
@@ -240,20 +320,32 @@ def api_sensor_readings(sensor_id):
     if request.method == "POST":
         base = float(sensor["normal_flow"])
         scen = sensor["scenario"]
+        now_dt = datetime.now()
+
         if scen in ("burst", "burst_leak"):
             flow = round(base * random.uniform(2.1, 2.5), 1)
             pressure = round(random.uniform(0.9, 1.3), 1)
+            ts = now_dt.strftime("%Y-%m-%d %I:%M:%S %p")
+        elif scen == "night_leak":
+            # Simulates Minimum Night Flow (MNF) between 02:00 AM and 04:00 AM when normal usage should be ~0 L/hr
+            flow = round(base * random.uniform(0.75, 1.15), 1)
+            pressure = round(random.uniform(1.6, 1.9), 1)
+            night_min = random.randint(10, 55)
+            night_hour = random.choice(["02", "03"])
+            ts = now_dt.strftime(f"%Y-%m-%d {night_hour}:{night_min:02d}:00 AM (Night 2-4 AM)")
         elif scen in ("continuous_leak", "leak"):
             flow = round(base * random.uniform(1.45, 1.75), 1)
             pressure = round(random.uniform(1.5, 1.8), 1)
+            ts = now_dt.strftime("%Y-%m-%d %I:%M:%S %p")
         elif scen in ("gradual_leak", "gradual"):
             flow = round(base * random.uniform(1.25, 1.45), 1)
             pressure = round(random.uniform(1.8, 2.0), 1)
+            ts = now_dt.strftime("%Y-%m-%d %I:%M:%S %p")
         else:
             flow = round(base * random.uniform(0.95, 1.05), 1)
             pressure = round(random.uniform(2.1, 2.3), 1)
+            ts = now_dt.strftime("%Y-%m-%d %I:%M:%S %p")
 
-        ts = datetime.now(timezone.utc).isoformat()
         conn.execute(
             "INSERT INTO readings (sensor_id, flow_rate, pressure, timestamp) VALUES (?, ?, ?, ?)",
             (sensor_id, flow, pressure, ts)

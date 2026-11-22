@@ -8,9 +8,7 @@ Leakage Detection Center
 
 {% block styles %}
 <style>
-.alerts-intro {
-    margin-bottom: 25px;
-}
+.alerts-intro { margin-bottom: 25px; }
 .alerts-intro h2 { color: #12345a; font-size: 25px; margin-bottom: 8px; }
 .alerts-intro p { color: #64748b; }
 
@@ -55,13 +53,14 @@ Leakage Detection Center
 .alert-filters select { flex: 1; min-width: 150px; }
 
 .alerts-table-wrapper { width: 100%; overflow-x: auto; }
-.alerts-table { width: 100%; min-width: 780px; border-collapse: collapse; text-align: left; }
+.alerts-table { width: 100%; min-width: 850px; border-collapse: collapse; text-align: left; }
 .alerts-table th { background: #edf5fb; color: #12345a; padding: 14px; font-size: 14px; }
 .alerts-table td { padding: 15px 14px; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 14px; }
 .alerts-table tr:hover { background: #f8fafc; }
 
 .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
 .high { background: #fee2e2; color: #dc2626; }
+.night { background: #e0e7ff; color: #3730a3; }
 .medium { background: #fef3c7; color: #b45309; }
 .pending { background: #fef3c7; color: #b45309; }
 .resolved { background: #dcfce7; color: #15803d; }
@@ -88,14 +87,14 @@ Leakage Detection Center
 
 <div class="alerts-intro">
     <h2>🚨 Leakage Detection Center</h2>
-    <p>Monitor suspected water leakage, identify severity, and resolve alerts across all system modules.</p>
+    <p>Monitor daytime & 2:00–4:00 AM night-flow leaks, calculate financial loss in ₹, and approve/resolve alerts.</p>
 </div>
 
 <!-- SUMMARY CARDS -->
 <div class="alerts-summary">
     <div class="alert-card"><h3>Active Alerts (Open)</h3><h2 id="totalAlerts">00</h2></div>
     <div class="alert-card"><h3>High Severity (Open)</h3><h2 id="highAlerts">00</h2></div>
-    <div class="alert-card"><h3>Medium Severity (Open)</h3><h2 id="mediumAlerts">00</h2></div>
+    <div class="alert-card"><h3>Night / Medium (Open)</h3><h2 id="mediumAlerts">00</h2></div>
     <div class="alert-card"><h3>Resolved Alerts</h3><h2 id="resolvedAlerts">00</h2></div>
 </div>
 
@@ -107,7 +106,8 @@ Leakage Detection Center
         <input type="text" id="alertSearch" placeholder="Search alert ID or location...">
         <select id="severityFilter">
             <option value="all">All Severities</option>
-            <option value="high">High</option>
+            <option value="high">High (Burst)</option>
+            <option value="night">Night Leak (2–4 AM)</option>
             <option value="medium">Medium</option>
         </select>
         <select id="statusFilter">
@@ -124,6 +124,7 @@ Leakage Detection Center
                     <th>Alert ID</th>
                     <th>Location</th>
                     <th>Flow Rate</th>
+                    <th>Daily Wastage (L & ₹)</th>
                     <th>Severity</th>
                     <th>Detection Time</th>
                     <th>Status</th>
@@ -132,7 +133,7 @@ Leakage Detection Center
             </thead>
             <tbody id="alertTable">
                 <tr>
-                    <td colspan="7" style="text-align:center; color:#64748b;">Scanning sensors...</td>
+                    <td colspan="8" style="text-align:center; color:#64748b;">Scanning sensors...</td>
                 </tr>
             </tbody>
         </table>
@@ -144,6 +145,8 @@ Leakage Detection Center
 
 {% block scripts %}
 <script>
+const TARIFF_PER_LITER = 0.08;
+
 function getCurrentUser() {
     try { return JSON.parse(localStorage.getItem("aquaguard_user") || "{}"); }
     catch (e) { return {}; }
@@ -173,7 +176,8 @@ async function scanAlertsFromBackend() {
         let sensors = sData.sensors || [];
 
         const user = getCurrentUser();
-        const isAdmin = !user.role || user.role === "admin";
+        // Both Admin and Management have approval/resolve permission
+        const canResolve = !user.role || user.role === "admin" || user.role === "management";
 
         if (user.role === "resident" && user.location_id) {
             sensors = sensors.filter(s => s.location_id.toLowerCase() === user.location_id.toLowerCase());
@@ -181,7 +185,7 @@ async function scanAlertsFromBackend() {
 
         const resolvedStore = getResolvedStore();
         const resolvedHistory = getResolvedHistoryList();
-        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak"];
+        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak", "night_leak"];
 
         const rows = [];
         let highOpen = 0;
@@ -198,12 +202,17 @@ async function scanAlertsFromBackend() {
             const detTime = latest && latest.timestamp ? latest.timestamp : new Date().toISOString();
 
             const isBurst = s.scenario === "burst" || s.scenario === "burst_leak" || (s.scenario !== "normal" && flow > baseline * 1.8);
+            const isNight = s.scenario === "night_leak";
             const isLeak = leakScenarios.includes(s.scenario) || (s.scenario !== "normal" && flow > baseline * 1.3);
 
-            if (isBurst || isLeak) {
+            if (isBurst || isNight || isLeak) {
                 const isAlreadyResolved = !!resolvedStore[s.sensor_id];
-                const severityKey = isBurst ? "high" : "medium";
-                const severityLabel = isBurst ? "High" : "Medium";
+                const severityKey = isBurst ? "high" : (isNight ? "night" : "medium");
+                const severityLabel = isBurst ? "High" : (isNight ? "Night (2–4 AM)" : "Medium");
+
+                const lossLiters = Math.round(flow * (isBurst ? 6 : (isNight ? 2 : 4)));
+                const lossInr = (lossLiters * TARIFF_PER_LITER).toFixed(2);
+                const lossSummary = `${lossLiters} L (₹${lossInr})`;
 
                 if (!isAlreadyResolved) {
                     if (isBurst) highOpen++;
@@ -215,6 +224,7 @@ async function scanAlertsFromBackend() {
                     sensorId: s.sensor_id,
                     location: `${s.location_id} (${s.sensor_id})`,
                     flowRate: flow.toFixed(1),
+                    lossSummary,
                     severityKey,
                     severityLabel,
                     detTime,
@@ -238,7 +248,7 @@ async function scanAlertsFromBackend() {
         const resolvedCount = rows.filter(r => r.statusKey === "resolved").length;
 
         if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#15803d; font-weight:600;">✅ No active water leaks detected across monitored locations.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#15803d; font-weight:600;">✅ No active water leaks detected across monitored locations.</td></tr>';
         } else {
             tbody.innerHTML = "";
             rows.forEach(r => {
@@ -249,14 +259,15 @@ async function scanAlertsFromBackend() {
                     <td><strong>${r.alertId}</strong></td>
                     <td>${r.location}</td>
                     <td><strong>${r.flowRate} L/hour</strong></td>
+                    <td><strong>${r.lossSummary || "—"}</strong></td>
                     <td><span class="badge ${r.severityKey}">${r.severityLabel}</span></td>
                     <td>${r.detTime}</td>
                     <td><span class="badge ${r.statusKey}">${r.statusLabel}</span></td>
                     <td>
                         ${r.statusKey === "pending"
-                            ? (isAdmin
-                                ? `<button class="btn-resolve" onclick="resolveAlertEverywhere('${r.sensorId}', '${r.alertId}', '${r.location}', '${r.flowRate}', '${r.severityKey}', '${r.severityLabel}', '${r.detTime}')">✓ Resolve</button>`
-                                : `<span style="color:#94a3b8; font-size:12px;">Read-Only</span>`)
+                            ? (canResolve
+                                ? `<button class="btn-resolve" onclick="resolveAlertEverywhere('${r.sensorId}', '${r.alertId}', '${r.location}', '${r.flowRate}', '${r.lossSummary}', '${r.severityKey}', '${r.severityLabel}', '${r.detTime}')">✓ Resolve</button>`
+                                : `<span style="color:#94a3b8; font-size:12px;">Pending Approval</span>`)
                             : `<span style="color:#15803d; font-weight:600; font-size:12.5px;">✔ Closed</span>`}
                     </td>
                 `;
@@ -275,11 +286,13 @@ async function scanAlertsFromBackend() {
     }
 }
 
-async function resolveAlertEverywhere(sensorId, alertId, location, flowRate, severityKey, severityLabel, detTime) {
+async function resolveAlertEverywhere(sensorId, alertId, location, flowRate, lossSummary, severityKey, severityLabel, detTime) {
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const user = getCurrentUser();
+    const approver = user.name || "Authorized Staff";
 
     const resolvedStore = getResolvedStore();
-    resolvedStore[sensorId] = `Resolved Today at ${now}`;
+    resolvedStore[sensorId] = `Resolved by ${approver} at ${now}`;
     localStorage.setItem("aquaguard_completed_inspections", JSON.stringify(resolvedStore));
 
     const history = getResolvedHistoryList().filter(h => h.sensorId !== sensorId);
@@ -288,6 +301,7 @@ async function resolveAlertEverywhere(sensorId, alertId, location, flowRate, sev
         sensorId,
         location,
         flowRate,
+        lossSummary,
         severityKey,
         severityLabel,
         detTime,

@@ -38,7 +38,8 @@ Dashboard Overview
 .dash-card:nth-child(4) { border-left-color: #f59e0b; }
 
 .dash-card h3 { color: #64748b; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
-.dash-card h2 { color: #12345a; font-size: 27px; font-weight: 700; }
+.dash-card h2 { color: #12345a; font-size: 26px; font-weight: 700; }
+.dash-sub-metric { font-size: 13px; color: #b45309; font-weight: 700; margin-top: 6px; }
 
 .dash-panel {
     background: #ffffff;
@@ -53,13 +54,14 @@ Dashboard Overview
 .chart-wrapper { position: relative; height: 300px; width: 100%; }
 
 .alerts-table-wrapper { width: 100%; overflow-x: auto; }
-.alerts-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+.alerts-table { width: 100%; border-collapse: collapse; text-align: left; min-width: 650px; }
 .alerts-table th { background: #edf5fb; color: #12345a; padding: 14px 16px; font-size: 14px; }
 .alerts-table td { padding: 15px 16px; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 14px; }
 .alerts-table tr:hover { background: #f8fafc; }
 
 .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 .badge-high { background: #fee2e2; color: #dc2626; }
+.badge-night { background: #e0e7ff; color: #3730a3; }
 .badge-medium { background: #fef3c7; color: #b45309; }
 .badge-pending { background: #e0f2fe; color: #0369a1; }
 
@@ -74,7 +76,7 @@ Dashboard Overview
 <div class="dash-welcome">
     <div>
         <h2>💧 Welcome to AquaGuard</h2>
-        <p id="dashSubtitle">Monitor water consumption and detect possible leakage across your network.</p>
+        <p id="dashSubtitle">Monitor water consumption, 2–4 AM night flow anomalies, and financial loss in real time.</p>
     </div>
 </div>
 
@@ -83,7 +85,11 @@ Dashboard Overview
     <div class="dash-card"><h3>Total Consumption</h3><h2 id="dashTotalConsumption">0.0 L</h2></div>
     <div class="dash-card"><h3>Possible Leaks</h3><h2 id="dashPossibleLeaks">00</h2></div>
     <div class="dash-card"><h3>Active Sensors</h3><h2 id="dashActiveSensors">00</h2></div>
-    <div class="dash-card"><h3>Estimated Water Loss</h3><h2 id="dashWaterLoss">0 L</h2></div>
+    <div class="dash-card">
+        <h3>Estimated Water & ₹ Loss</h3>
+        <h2 id="dashWaterLoss">0 L</h2>
+        <div class="dash-sub-metric" id="dashRupeeLoss">₹0.00 / day wasted</div>
+    </div>
 </div>
 
 <!-- FLOW OVERVIEW CHART -->
@@ -103,13 +109,14 @@ Dashboard Overview
                 <tr>
                     <th>Location</th>
                     <th>Flow Rate</th>
-                    <th>Severity</th>
+                    <th>Est. Loss (L & ₹)</th>
+                    <th>Severity / Type</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody id="dashAlertsBody">
                 <tr>
-                    <td colspan="4" style="text-align:center; color:#64748b;">Loading live sensor status...</td>
+                    <td colspan="5" style="text-align:center; color:#64748b;">Loading live sensor status...</td>
                 </tr>
             </tbody>
         </table>
@@ -123,6 +130,7 @@ Dashboard Overview
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let dashChart = null;
+const TARIFF_PER_LITER = 0.08; // ₹0.08 per Liter (₹80 per 1,000 L)
 
 function getCurrentUser() {
     try { return JSON.parse(localStorage.getItem("aquaguard_user") || "{}"); }
@@ -143,10 +151,10 @@ async function loadDashboardData() {
         if (user.role === "resident" && user.location_id) {
             sensors = sensors.filter(s => s.location_id.toLowerCase() === user.location_id.toLowerCase());
             document.getElementById("dashSubtitle").textContent =
-                `Showing live water usage and alerts for your assigned block: ${user.location_id}`;
+                `Showing live water usage, night-flow leaks, and ₹ loss for your block: ${user.location_id}`;
         }
 
-        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak"];
+        const leakScenarios = ["leak", "burst", "continuous_leak", "burst_leak", "gradual_leak", "night_leak"];
         let totalConsumption = 0;
         let leakCount = 0;
         let totalLoss = 0;
@@ -168,30 +176,37 @@ async function loadDashboardData() {
             flows.push(Number(flow.toFixed(1)));
 
             const isBurst = s.scenario === "burst" || s.scenario === "burst_leak" || (s.scenario !== "normal" && flow > baseline * 1.8);
+            const isNight = s.scenario === "night_leak";
             const isLeak = leakScenarios.includes(s.scenario) || (s.scenario !== "normal" && flow > baseline * 1.3);
 
-            if (isBurst || isLeak) {
+            if (isBurst || isNight || isLeak) {
                 leakCount++;
-                totalLoss += Math.round(flow * (isBurst ? 6 : 4));
+                const lossLiters = Math.round(flow * (isBurst ? 6 : (isNight ? 2 : 4)));
+                const lossInr = (lossLiters * TARIFF_PER_LITER).toFixed(2);
+                totalLoss += lossLiters;
+
                 alertRows.push({
                     location: `${s.location_id} (${s.sensor_id})`,
                     flow: `${flow.toFixed(1)} L/hour`,
-                    severity: isBurst ? "High" : "Medium",
-                    badgeClass: isBurst ? "badge-high" : "badge-medium"
+                    lossText: `${lossLiters} L/day (₹${lossInr})`,
+                    severity: isBurst ? "High (Pipe Burst)" : (isNight ? "Night Flow (2–4 AM)" : "Medium"),
+                    badgeClass: isBurst ? "badge-high" : (isNight ? "badge-night" : "badge-medium")
                 });
             }
         }
 
+        const totalRupees = (totalLoss * TARIFF_PER_LITER).toFixed(2);
         document.getElementById("dashTotalConsumption").textContent = `${totalConsumption.toFixed(1)} L`;
         document.getElementById("dashPossibleLeaks").textContent = String(leakCount).padStart(2, "0");
         document.getElementById("dashActiveSensors").textContent = String(sensors.length).padStart(2, "0");
         document.getElementById("dashWaterLoss").textContent = `${totalLoss.toLocaleString()} L`;
+        document.getElementById("dashRupeeLoss").textContent = `₹${Number(totalRupees).toLocaleString()} / day wasted`;
 
         const tbody = document.getElementById("dashAlertsBody");
         if (sensors.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#64748b;">No active sensors yet. Go to <strong>Virtual Sensors</strong> and click "+ Load 4 Demo Virtual Sensors" to start!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748b;">No active sensors yet. Go to <strong>Virtual Sensors</strong> to load sensors!</td></tr>';
         } else if (alertRows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#15803d; font-weight:600;">✅ All monitored pipelines are operating within normal flow thresholds.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#15803d; font-weight:600;">✅ All monitored pipelines are operating within normal flow thresholds (₹0.00 loss).</td></tr>';
         } else {
             tbody.innerHTML = "";
             alertRows.forEach(a => {
@@ -199,6 +214,7 @@ async function loadDashboardData() {
                 tr.innerHTML = `
                     <td><strong>${a.location}</strong></td>
                     <td>${a.flow}</td>
+                    <td><strong>${a.lossText}</strong></td>
                     <td><span class="badge ${a.badgeClass}">${a.severity}</span></td>
                     <td><span class="badge badge-pending">Pending</span></td>
                 `;
